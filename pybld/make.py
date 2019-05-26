@@ -8,7 +8,7 @@ import inspect
 from colorama import Fore, Back
 
 from pybld.utility import print_color
-from pybld.utility import xHighlightErrors, xHighlightNotes, xHighlightWarnings, Highlight_custom
+from pybld.utility import xHighlightErrors, xHighlightNotes, xHighlightWarnings, Highlight_Custom
 from pybld.utility import kill_alive_process, wait_process
 from pybld.utility import get_makefile_var
 
@@ -20,6 +20,7 @@ _HighlightingDict = {}
 
 
 def eval(txt):
+    # TODO: is this a hack, or what?? figure it out
     outerframe = inspect.stack()[1][0]
     outerframeGlobals = outerframe.f_globals
 
@@ -31,13 +32,13 @@ def eval(txt):
             val = outerframeGlobals[v]
             if type(val) is list:
                 val = ' '.join(val)
-            newtxt = newtxt.replace('{%s}' % v, val)
+            newtxt = newtxt.replace('f{v}', val)
         except:
             val = os.getenv(v)
             if val:
-                newtxt = newtxt.replace('{%s}' % v, val)
+                newtxt = newtxt.replace(f'{v}', val)
             else:
-                print_color('Error: cannot find variable %s' % v, Fore.RED)
+                print_color(f'Error: cannot find variable {v}', Fore.RED)
                 sys.exit()
     return newtxt
 
@@ -84,7 +85,7 @@ def _Highlight_Outputs(txt):
         if _Highlighting:
             for key in _HighlightingDict.keys():
                 color = _HighlightingDict[key]
-                retV = Highlight_custom(retV, key, color)
+                retV = Highlight_Custom(retV, key, color)
     except Exception as e:
         print(e)
         pass
@@ -93,6 +94,7 @@ def _Highlight_Outputs(txt):
 
 
 def find(root='./', filter='*', recursive=False, abslute=False, DirOnly=False):
+    '''Find Files'''
     srcfiles = []
     rootdir = os.path.abspath(root) if abslute else os.path.normpath(root)
     if recursive:
@@ -162,17 +164,17 @@ def compile(compiler, flags, sources, objects):
 
     if len(srcs) != len(objs):
         print(f'{Fore.RED}Error:{Fore.RESET} the length of the source files list does not match with objects files list')
-        return
+        return False
 
     for i, item in enumerate(srcs):
-        cmd = '{CC} {flags} -c {src} -o {obj}'.format(CC=compiler, flags=flags, src=item, obj=objs[i])
+        cmd = f'{compiler} {flags} -c {item} -o {objs[i]}'
 
         srcFile = os.path.basename(item)
         objFile = os.path.basename(objs[i])
         srcFile = srcFile.split('.')[0]
         objFile = objFile.split('.')[0]
         if srcFile != objFile:
-            print(f'{Fore.RED}Compiling Error: {Fore.RESET}source file %s and object file %s do not match. Make sure that the source and the object files lists are correspondent' % (item, objs[i]))
+            print(f'{Fore.RED}Compiling Error: {Fore.RESET}source file {item} and object file {objs[i]} do not match. Make sure that the source and the object files lists are correspondent')
             return False
         if os.path.isfile(objs[i]):  # if the object file already exists
             src_mTime = os.path.getmtime(item)
@@ -191,7 +193,7 @@ def compile(compiler, flags, sources, objects):
             print(_Highlight_Outputs(outputs))
 
         if not success:
-            print_color(f'{Fore.WHITE}{Back.RED}Error: {Fore.RESET}{Back.RESET}failed to compile, \n    %s' % cmd)
+            print_color(f'{Fore.WHITE}{Back.RED}Error: {Fore.RESET}{Back.RESET}failed to compile, \n    {cmd}')
             return False
 
     return True
@@ -217,14 +219,14 @@ def link(linker, flags, objects, executable):
 
     if linkFlag:
         print_color('Linking ...', Fore.GREEN, Back.CYAN)
-        cmd = '{linker} {flags} {objs} -o {executable}'.format(linker=linker, flags=flags, objs=objs, executable=executable)
+        cmd = f'{linker} {flags} {objs} -o {executable}'
         hlt = False  # util.is_Highlight_ON()
         success, outputs = sh(cmd, True, hl)
         if hlt:
             print(_Highlight_Outputs(outputs))
 
         if not success:
-            print_color("Failed to link object files to assemble '%s'" % executable, Fore.WHITE, Back.RED)
+            print_color(f"Failed to link object files to assemble '{executable}'", Fore.WHITE, Back.RED)
             return False
         else:
             return True
@@ -252,14 +254,14 @@ def archive(archiver, flags, objects, library):
 
     if not satisfactionFlag:
         print_color('Archiving...', Fore.WHITE, Back.BLUE)
-        cmd = '{AR} {flags} {output} {objs}'.format(AR=archiver, flags=flags, objs=objs, output=library)
+        cmd = f'{archiver} {flags} {library} {objs}'
         hlt = False  # util.is_Highlight_ON()
         success, outputs = sh(cmd, True, hl)
         if hlt:
             print(_Highlight_Outputs(outputs))
 
         if not success:
-            print_color("Failed to archive object files to assemble '%s'" % library, Fore.RED)
+            print_color(f"Failed to archive object files to assemble '{library}'", Fore.RED)
             return False
         else:
             return True
@@ -356,7 +358,7 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
                     timed_out = wait_process(Timeout, CMD)
                     if timed_out:
-                        print_color('The command "%s" is timed out!' % cmd, Fore.RED)
+                        print_color(f'The command "{cmd}" has timed out!', Fore.RED)
                     kill_alive_process(CMD)
                 except:
                     pass
@@ -370,7 +372,7 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
                     timed_out = wait_process(Timeout, CMD)
                     if timed_out:
-                        print_color('The command "%s" is timed out!' % cmd, Fore.WHITE, Back.RED)
+                        print_color(f'The command "{cmd}" is timed out!', Fore.WHITE, Back.RED)
                     kill_alive_process(CMD)
                 except:
                     pass
@@ -389,8 +391,8 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
         return P.returncode == 0, outputs
     except:
         if get_makefile_var('Debug') is True:
-            from utility import Print_Debuging_messages
-            Print_Debuging_messages()
+            from utility import Print_Exception
+            Print_Exception()
 
         return False, ''
 
@@ -414,8 +416,9 @@ def run(cmd, show_cmd=False, Highlight=False, Timeout=10):
 
 
 def target(func):
+    # TODO: Add pre/post functions??
     """
-        This is a decorator function
+    This is a decorator function
     :param func:
     :return:
     """

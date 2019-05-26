@@ -2,7 +2,7 @@
 
 gccTemplate = """
 
-from pymake2 import *
+from PyBld import *
 Debug = True # <-- set it to True to enable more debugging messages
 # HighlightErrors = True # To enable the highliter
 HighlightWarnings = True # To enable the highliter

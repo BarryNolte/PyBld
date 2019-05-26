@@ -26,6 +26,6 @@ setup(
         "Environment :: Console",
     ],
     entry_points={
-        'console_scripts': ['pybld = pybld.__main__:main']
+        'console_scripts': ['pybld = pybld.pybuild:do_main']
     },
 )

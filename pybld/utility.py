@@ -1,3 +1,4 @@
+'''Utility functions for PyBld '''
 from colorama import Fore, Back, Style
 from re import sub, IGNORECASE, Pattern
 from time import time, sleep
@@ -6,6 +7,7 @@ from inspect import stack
 
 
 def get_makefile_var(var_str):
+    # TODO: this is a hack at best
     """
     :param var_str: str
     :return:
@@ -21,8 +23,8 @@ def get_makefile_var(var_str):
         return None
 
 
-def Print_Debuging_messages():
-    print_color('Debugging message: (Program Exception)', Fore.WHITE, Back.LIGHTGREEN_EX)
+def Print_Exception():
+    print_color('Crash: (Program Exception)', Fore.WHITE, Back.LIGHTGREEN_EX)
     print_exc()
 
 
@@ -75,7 +77,7 @@ def wait_process(Timeout, Proc, Print_statusTime=-1):
     return True  # The Process is Timed Out
 
 
-def Highlight_custom(txt, pattern, color):
+def Highlight_Custom(txt, pattern, color):
     # type:(str, pattern, tuple[str]) -> str
     # if type(txt) is unicode:
     #    txt = txt.encode('UTF-8')
@@ -84,14 +86,13 @@ def Highlight_custom(txt, pattern, color):
         founds = pattern.findall(txt)
         newtxt = txt
         for s in founds:
-            colored_s = f'{color[0]}{color[1]}{s}{Style.RESET}'
+            colored_s = f'{color[0]}{color[1]}{s}{Style.RESET_ALL}'
             newtxt = newtxt.replace(s, colored_s)
         retV = newtxt
     elif type(pattern) is str:
         s = pattern
-        colored_s = f'{color[0]}{color[1]}{s}{Style.RESET}'
-        newtxt = txt.replace(s, colored_s)
-        retV = newtxt
+        colored_s = f'{color[0]}{color[1]}{s}{Style.RESET_ALL}'
+        retV = txt.replace(s, colored_s)
 
     return retV
 
@@ -103,3 +104,8 @@ def kill_alive_process(Proc):
             Proc.kill()
         except:
             pass
+
+
+if __name__ == '__main__':
+    '''Test Functions'''
+    print(Highlight_Custom('foo bar baz', 'bar', [Fore.GREEN, Back.YELLOW]))
