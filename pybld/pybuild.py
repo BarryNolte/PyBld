@@ -5,65 +5,56 @@ import re
 import argparse
 import argcomplete
 
-from pybld.utility import Fore, Back, print_color
+from pybld.utility import print_color
 from pybld.make import shell
 
 from pybld.makefile_template import gccTemplate
+from pybld.config import defaultMakefile
+from pybld.config import theme, crossMark
 
 HighlightErrors = False
 HighlightWarnings = False
 Debug = True
 
 
-class EntryPoint:
-    def Entry():
-        do_main()
-
-
-class argsT():
-    t = 'all'
-    f = None
-    j = 1
-
-
 class Target_t(object):
-    def __init__(self, func, args, MakefileM):
+    def __init__(self, func, args, MakefileObj):
         self.Name = func
-        self.func = getattr(MakefileM, func)
+        self.func = getattr(MakefileObj, func)
         args_str = [item.strip() for item in args.split(',')]
-        args_var = [getattr(MakefileM, item)
+        args_var = [getattr(MakefileObj, item)
                     for item in args_str if item != '']
         self.args_str = args_str
         self.args_var = args_var
-        self.MakefileM = MakefileM
+        self.MakefileObj = MakefileObj
         self.Dependencies = args_var
 
     def check_dependencies(self):
         if len(self.Dependencies) == 0:
             return True
 
-        print_color(f'Dependency checking of Target "{self.Name}"', Fore.WHITE, Back.CYAN)
+        print_color(f'Dependency checking of Target "{self.Name}"', theme['info'].Foreground(), theme['info'].Background())
         for i, item in enumerate(self.Dependencies):
             if type(item) is list:
                 # assumed to be list of file names (paths)
                 for subitem in item:
                     if not os.path.isfile(subitem):
-                        print_color(f'Dependency Error @ Target "{self.Name}": {subitem} does not exsist!', Fore.RED, Back.LIGHTWHITE_EX)
+                        print_color(f'Dependency Error @ Target "{self.Name}": {subitem} does not exsist!', theme['error'].Foreground(), theme['error'].Background())
                         return False
             elif type(item) is str:
                 if not os.path.isfile(item):
-                    print_color(f'Dependency Error @ Target "{self.Name}": {item} does not exsist!', Fore.RED, Back.LIGHTWHITE_EX)
+                    print_color(f'Dependency Error @ Target "{self.Name}": {item} does not exsist!', theme['error'].Foreground(), theme['error'].Background())
                     return False
             elif type(item) is Target_t:  # another target
                 if not item.run():
-                    print_color(f'Dependency Error @ Target "{self.Name}": Target "{item.Name}" failed', Fore.RED, Back.LIGHTWHITE_EX)
+                    print_color(f'Dependency Error @ Target "{self.Name}": Target "{item.Name}" failed', theme['error'].Foreground(), theme['error'].Background())
                     return False
 
         return True
 
     def run(self):
         if self.check_dependencies():
-            print_color(f'Executing Target "{self.Name}"', Fore.WHITE, Back.CYAN)
+            print_color(f'Executing Target "{self.Name}"', theme['target'].Foreground(), theme['target'].Background())
             try:
                 if len(self.args_var) == 0:
                     retV = self.func()
@@ -71,10 +62,10 @@ class Target_t(object):
                     retV = self.func(*self.args_var)
 
                 if not retV:
-                    print_color(f'Target "{self.Name}" failed', Fore.WHITE, Back.RED)
+                    print_color(f'{crossMark}Target "{self.Name}" failed', theme['error'].Foreground(), theme['error'].Background())
                 return retV
             except:
-                print_color(f'Internal error in the target function "{self.Name}"', Fore.WHITE, Back.LIGHTRED_EX)
+                print_color(f'Internal error in the target function "{self.Name}"', theme['error'].Foreground(), theme['error'].Background())
                 if Debug:
                     traceback.print_exc()
 
@@ -82,7 +73,7 @@ class Target_t(object):
             return False
 
 
-def Parse_Makefile(makefile_path, MakefileM):
+def Parse_Makefile(makefile_path, makefileObj):
     Targets = {}  # type: dict[str, Target_t]
     if os.path.isfile(makefile_path):
         with open(makefile_path, 'r') as f:
@@ -95,7 +86,7 @@ def Parse_Makefile(makefile_path, MakefileM):
                 target_func = target_func[0]
                 target_args = re.findall(r'def\s+\w+\s*\((.*)\)', makefile_lines[i + 1])
                 target_args = target_args[0]
-                TargetV = Target_t(target_func, target_args, MakefileM)
+                TargetV = Target_t(target_func, target_args, makefileObj)
                 Targets[target_func] = TargetV
 
         # Detect Dependencies
@@ -113,7 +104,7 @@ def Parse_Makefile(makefile_path, MakefileM):
 def getTargets_forBash_autocomplete(makefile_path=''):
     Targets = []
     if makefile_path == '':
-        makefile_path = './makefile.py'
+        makefile_path = defaultMakefile
     if os.path.isfile(makefile_path):
         with open(makefile_path, 'r') as f:
             makefile_str = f.read()
@@ -126,21 +117,14 @@ def getTargets_forBash_autocomplete(makefile_path=''):
     return Targets
 
 
-def Auto_Target():
-    if os.path.isfile('./makefile.py'):
-        return True
-    else:
-        return False
-
-
 def complete_targets(prefix, parsed_args, **kwargs):
     Targets = []
     # argcomplete.warn(parsed_args)
     # argcomplete.warn(parsed_args.f)
     if parsed_args.f:
         Targets = getTargets_forBash_autocomplete(parsed_args.f)
-    elif Auto_Target():
-        Targets = getTargets_forBash_autocomplete('./makefile.py')
+    elif os.path.isfile(defaultMakefile):
+        Targets = getTargets_forBash_autocomplete(defaultMakefile)
     else:
         Targets = ["No_MakeFile"]
 
@@ -162,19 +146,17 @@ def do_main():
 
     # Parse Command Line
     parser = argparse.ArgumentParser(description='PyBld is a simple make system implemented in python')
-    parser.add_argument('-t', metavar='Target', help='Make target in the makefile', default='all')  # .completer = complete_targets
-    parser.add_argument('-f', metavar='MakefilePath', help='Explicit makefile, default = ./makefile.py', default='./makefile.py')
-    parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process')
-    parser.add_argument('-v', metavar="Verbose", type=bool, help='Verbose output')
+    parser.add_argument('-t', metavar='    Target', type=str, help='Make target in the makefile', default='all')  # .completer = complete_targets
+    parser.add_argument('-f', metavar='    Makefile', help=f'Explicit path to makefile, default = {defaultMakefile}', default=defaultMakefile)
+    parser.add_argument('-j', metavar='    Jobs', type=int, help='Number of jobs used in the make process')
+    parser.add_argument('-v', metavar="    Verbose", type=bool, help='Verbose output', default=False)
+    parser.add_argument('-debug', metavar="Debug", type=bool, help='Create output suitable to debug a makefile', default=False)
+
     argcomplete.autocomplete(parser)
 
-    # if len(sys.argv) > 1:
     args = parser.parse_args()
-    # else:
-    #     args = argsT()
 
-    # if args.f:
-    #    makefilePath = args.f
+    # Does the make file exist?
     if not os.path.isfile(args.f):
         retV = input(f'No makefile exists!, do you want to create "{args.f}"? (y/n): ')
         if retV.lower() == 'y':
@@ -183,15 +165,14 @@ def do_main():
                 f.write(tempText)
         sys.exit()
 
-    import imp
-
     # TODO: ???
     # pkgdir = os.path.normpath(os.path.dirname(__file__) + '/../')
     # sys.path.insert(0, pkgdir)
     # if os.path.exists('/opt/PyBld'):
     #    sys.path.insert(0, '/opt/')
 
-    makefileObj = imp.load_source('makefileM', args.f)
+    import imp
+    makefileObj = imp.load_source('makefileObj', args.f)
     shell('rm -f *.pyc')
 
     # TODO: Make this into a configuration class??
@@ -199,13 +180,15 @@ def do_main():
     HighlightErrors = getattr(makefileObj, 'HighlightErrors', False)
     HighlightWarnings = getattr(makefileObj, 'HighlightWarnings', False)
 
+    # Get list of possible targets
     Targets = Parse_Makefile(args.f, makefileObj)
 
+    # If we have a target, execute it
     if args.t:
         try:
             selected_Target = Targets[args.t.strip()]  # type: Target_t
         except:
-            print_color(f'Error: target function "{args.t}" does not exist!', Fore.RED, Back.LIGHTWHITE_EX)
+            print_color(f'Error: target function "{args.t}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
             if Debug:
                 traceback.print_exc()
             sys.exit()
@@ -214,7 +197,7 @@ def do_main():
         return retV
 
     else:
-        print('No target to build, exiting...')
+        print_color(f'No target to build, exiting...', theme['warning'].Foreground(), theme['warning'].Background())
         sys.exit()
 
 

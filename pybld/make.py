@@ -5,12 +5,13 @@ import os
 import sarge
 import re
 import inspect
-from colorama import Fore, Back
 
-from pybld.utility import print_color
+from pybld.utility import Fore, Back, print_color
 from pybld.utility import xHighlightErrors, xHighlightNotes, xHighlightWarnings, Highlight_Custom
 from pybld.utility import kill_alive_process, wait_process
 from pybld.utility import get_makefile_var
+
+from pybld.config import theme
 
 import fnmatch
 
@@ -38,7 +39,7 @@ def eval(txt):
             if val:
                 newtxt = newtxt.replace(f'{v}', val)
             else:
-                print_color(f'Error: cannot find variable {v}', Fore.RED)
+                print_color(f'Error: cannot find variable {v}', theme['error'].Foreground(), theme['error'].Background())
                 sys.exit()
     return newtxt
 
@@ -149,7 +150,7 @@ def get_filename(path):
 
 
 def compile(compiler, flags, sources, objects):
-    print_color('Compiling ...', Fore.WHITE, Back.CYAN)
+    print_color('Compiling ...', theme['target'].Foreground(), theme['target'].Background())
     Highlight_NO = False  # True if util.is_Highlight_ON() else False
 
     if type(sources) is list:
@@ -187,7 +188,7 @@ def compile(compiler, flags, sources, objects):
             if not os.path.exists(objDir):
                 os.makedirs(objDir)
 
-        print_color(f'Compiling: {item}', Fore.CYAN, Back.BLUE)
+        print_color(f'Compiling: {item}', theme['target'].Foreground(), theme['target'].Background())
         success, outputs = sh(cmd, True, Highlight_NO)
         if Highlight_NO:
             print(_Highlight_Outputs(outputs))
@@ -218,7 +219,7 @@ def link(linker, flags, objects, executable):
                 break
 
     if linkFlag:
-        print_color('Linking ...', Fore.GREEN, Back.CYAN)
+        print_color('Linking ...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{linker} {flags} {objs} -o {executable}'
         hlt = False  # util.is_Highlight_ON()
         success, outputs = sh(cmd, True, hl)
@@ -226,7 +227,7 @@ def link(linker, flags, objects, executable):
             print(_Highlight_Outputs(outputs))
 
         if not success:
-            print_color(f"Failed to link object files to assemble '{executable}'", Fore.WHITE, Back.RED)
+            print_color(f"Failed to link object files to assemble '{executable}'", theme['error'].Foreground(), theme['error'].Background())
             return False
         else:
             return True
@@ -253,7 +254,7 @@ def archive(archiver, flags, objects, library):
                 break
 
     if not satisfactionFlag:
-        print_color('Archiving...', Fore.WHITE, Back.BLUE)
+        print_color('Archiving...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{archiver} {flags} {library} {objs}'
         hlt = False  # util.is_Highlight_ON()
         success, outputs = sh(cmd, True, hl)
@@ -358,7 +359,7 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
                     timed_out = wait_process(Timeout, CMD)
                     if timed_out:
-                        print_color(f'The command "{cmd}" has timed out!', Fore.RED)
+                        print_color(f'The command "{cmd}" has timed out!', theme['error'].Foreground(), theme['error'].Background())
                     kill_alive_process(CMD)
                 except:
                     pass
@@ -372,7 +373,7 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
                     timed_out = wait_process(Timeout, CMD)
                     if timed_out:
-                        print_color(f'The command "{cmd}" is timed out!', Fore.WHITE, Back.RED)
+                        print_color(f'The command "{cmd}" is timed out!', theme['error'].Foreground(), theme['error'].Background())
                     kill_alive_process(CMD)
                 except:
                     pass

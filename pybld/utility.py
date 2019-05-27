@@ -29,7 +29,7 @@ def Print_Exception():
 
 
 def print_color(txt, fg='', bg='', bold=False):
-    print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}")
+    print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}")
 
 
 def xHighlightWarnings(txt):
