@@ -3,24 +3,16 @@ from colorama import Fore, Back, Style
 defaultMakefile = './makefile.py'
 
 config = {
+    'debug': False,
     'name': 'main.exe',
-    'cflags': ['/DNDEBUG', '/DUNICODE', '/O2', '/Wall'],
-    'lflags': ['/MACHINE:AMD64'],
+    'cflags': [],
+    'lflags': [],
 
-    'includepaths': [
-        r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\include',
-        r'C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\shared',
-        r'C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\ucrt',
-        r'C:\Program Files (x86)\Windows Kits\10\Include\10.0.10586.0\um'
-    ],
+    'includepaths': [],
 
-    'libpaths': [
-        r'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\lib\amd64',
-        r'C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\ucrt\x64',
-        r'C:\Program Files (x86)\Windows Kits\10\Lib\10.0.10586.0\um\x64'
-    ],
+    'libpaths': [],
 
-    'libs': ['kernel32.lib', 'user32.lib'],
+    'libs': [],
 
     'bindir': 'bin',
     'objdir': 'obj',
@@ -49,15 +41,15 @@ class ColorPair:
 theme = {
     'error': ColorPair(Fore.RED, Back.BLACK),
     'warning': ColorPair(Fore.YELLOW),
-    'info': ColorPair(Fore.LIGHTWHITE_EX),
+    'info': ColorPair(Fore.LIGHTGREEN_EX, Back.BLUE),
     'verbose': ColorPair(Fore.WHITE),
-    'target': ColorPair(Style.UNDERLINE + Fore.GREEN),
+    'target': ColorPair(Style.UNDERLINE + Fore.LIGHTGREEN_EX),
     'success': ColorPair(Fore.GREEN),
 }
 
 # Fun Emoji's for error reporting
-checkBox = u' \u2705  '
-crossMark = u' \u274c  '
+checkBox = u'✅  '
+crossMark = u'❌  '
 
 if __name__ == '__main__':
     '''Test Functions'''

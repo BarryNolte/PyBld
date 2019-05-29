@@ -1,97 +1,14 @@
 """Make functions for PyBld"""
 
-import sys
 import os
 import sarge
-import re
-import inspect
 
-from pybld.utility import Fore, Back, print_color
-from pybld.utility import xHighlightErrors, xHighlightNotes, xHighlightWarnings, Highlight_Custom
-from pybld.utility import kill_alive_process, wait_process
-from pybld.utility import get_makefile_var
+from pybld.utility import Fore, PrintColor, crossMark
+from pybld.utility import KillLiveProcesses, WaitOnProcesses
 
-from pybld.config import theme
+from pybld.config import theme, config
 
 import fnmatch
-
-
-_Highlighting = False
-_HighlightingDict = {}
-
-
-def eval(txt):
-    # TODO: is this a hack, or what?? figure it out
-    outerframe = inspect.stack()[1][0]
-    outerframeGlobals = outerframe.f_globals
-
-    vars = re.findall(r'\$\((\w+)\)', txt)
-    newtxt = re.sub(r'\$\((\w+)\)', r'{\1}', txt)
-
-    for v in vars:
-        try:
-            val = outerframeGlobals[v]
-            if type(val) is list:
-                val = ' '.join(val)
-            newtxt = newtxt.replace('f{v}', val)
-        except:
-            val = os.getenv(v)
-            if val:
-                newtxt = newtxt.replace(f'{v}', val)
-            else:
-                print_color(f'Error: cannot find variable {v}', theme['error'].Foreground(), theme['error'].Background())
-                sys.exit()
-    return newtxt
-
-
-def regx(pattern):
-    retV = re.compile(pattern, flags=re.IGNORECASE)
-    return retV
-
-
-def hl(regxP, fg_color=Fore.YELLOW, bg_color=''):
-    global _Highlighting, _HighlightingDict
-    _Highlighting = True
-    _HighlightingDict[regxP] = (fg_color, bg_color)
-
-
-def _Highlight_Outputs(txt):
-    outerframe = inspect.stack()[1][0]
-    outerframe = outerframe.f_back
-    outerframeGlobals = outerframe.f_globals
-
-    retV = txt
-    try:
-        HighlightWarnings = outerframeGlobals['HighlightWarnings']
-        if HighlightWarnings:
-            retV = xHighlightWarnings(retV)
-    except:
-        pass
-
-    try:
-        HighlightErrors = outerframeGlobals['HighlightErrors']
-        if HighlightErrors:
-            retV = xHighlightErrors(retV)
-    except:
-        pass
-
-    try:
-        HighlightNotes = outerframeGlobals['HighlightNotes']
-        if HighlightNotes:
-            retV = xHighlightNotes(retV)
-    except:
-        pass
-
-    try:  # custom highlight
-        if _Highlighting:
-            for key in _HighlightingDict.keys():
-                color = _HighlightingDict[key]
-                retV = Highlight_Custom(retV, key, color)
-    except Exception as e:
-        print(e)
-        pass
-
-    return retV
 
 
 def find(root='./', filter='*', recursive=False, abslute=False, DirOnly=False):
@@ -150,8 +67,7 @@ def get_filename(path):
 
 
 def compile(compiler, flags, sources, objects):
-    print_color('Compiling ...', theme['target'].Foreground(), theme['target'].Background())
-    Highlight_NO = False  # True if util.is_Highlight_ON() else False
+    PrintColor('Compiling ...', theme['target'].Foreground(), theme['target'].Background())
 
     if type(sources) is list:
         srcs = sources
@@ -175,7 +91,7 @@ def compile(compiler, flags, sources, objects):
         srcFile = srcFile.split('.')[0]
         objFile = objFile.split('.')[0]
         if srcFile != objFile:
-            print(f'{Fore.RED}Compiling Error: {Fore.RESET}source file {item} and object file {objs[i]} do not match. Make sure that the source and the object files lists are correspondent')
+            print(f'{crossMark}Compiling Error: source file "{item}" and object file "{objs[i]}" do not match./nMake sure that the source and the object files lists are correspondent')
             return False
         if os.path.isfile(objs[i]):  # if the object file already exists
             src_mTime = os.path.getmtime(item)
@@ -188,13 +104,12 @@ def compile(compiler, flags, sources, objects):
             if not os.path.exists(objDir):
                 os.makedirs(objDir)
 
-        print_color(f'Compiling: {item}', theme['target'].Foreground(), theme['target'].Background())
-        success, outputs = sh(cmd, True, Highlight_NO)
-        if Highlight_NO:
-            print(_Highlight_Outputs(outputs))
+        PrintColor(f'Compiling: {item}', theme['target'].Foreground(), theme['target'].Background())
+        success, outputs = ShellAsync(cmd, True)
+        print(outputs)
 
         if not success:
-            print_color(f'{Fore.WHITE}{Back.RED}Error: {Fore.RESET}{Back.RESET}failed to compile, \n    {cmd}')
+            PrintColor(f'{crossMark}Error: failed to compile, \n    {cmd}')
             return False
 
     return True
@@ -219,15 +134,13 @@ def link(linker, flags, objects, executable):
                 break
 
     if linkFlag:
-        print_color('Linking ...', theme['target'].Foreground(), theme['target'].Background())
+        PrintColor('Linking ...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{linker} {flags} {objs} -o {executable}'
-        hlt = False  # util.is_Highlight_ON()
-        success, outputs = sh(cmd, True, hl)
-        if hlt:
-            print(_Highlight_Outputs(outputs))
+        success, outputs = ShellAsync(cmd, True)
+        print(outputs)
 
         if not success:
-            print_color(f"Failed to link object files to assemble '{executable}'", theme['error'].Foreground(), theme['error'].Background())
+            PrintColor(f"Failed to link object files to assemble '{executable}'", theme['error'].Foreground(), theme['error'].Background())
             return False
         else:
             return True
@@ -254,15 +167,13 @@ def archive(archiver, flags, objects, library):
                 break
 
     if not satisfactionFlag:
-        print_color('Archiving...', theme['target'].Foreground(), theme['target'].Background())
+        PrintColor('Archiving...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{archiver} {flags} {library} {objs}'
-        hlt = False  # util.is_Highlight_ON()
-        success, outputs = sh(cmd, True, hl)
-        if hlt:
-            print(_Highlight_Outputs(outputs))
+        success, outputs = ShellAsync(cmd, True)
+        print(outputs)
 
         if not success:
-            print_color(f"Failed to archive object files to assemble '{library}'", Fore.RED)
+            PrintColor(f"Failed to archive object files to assemble '{library}'", Fore.RED)
             return False
         else:
             return True
@@ -342,25 +253,27 @@ def exclude(original, ignors):
     return retV
 
 
-def shell(cmd):
+def Shell(cmd):
+    '''Run cmd in the shell returning the output'''
     P = sarge.run(cmd, shell=True, stdout=sarge.Capture())
     return P.stdout.text
 
 
-def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
+def ShellAsync(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
     if show_cmd:
         print(cmd)
     try:
         if CaptureOutput:
             if Timeout > -1:
                 P = sarge.run(cmd, shell=True, stdout=sarge.Capture(), stderr=sarge.Capture(), async_=True)
+                sarge.join()
                 # sleep(3)
                 try:
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
-                    timed_out = wait_process(Timeout, CMD)
+                    timed_out = WaitOnProcesses(Timeout, CMD)
                     if timed_out:
-                        print_color(f'The command "{cmd}" has timed out!', theme['error'].Foreground(), theme['error'].Background())
-                    kill_alive_process(CMD)
+                        PrintColor(f'The command "{cmd}" has timed out!', theme['error'].Foreground(), theme['error'].Background())
+                    KillLiveProcesses(CMD)
                 except:
                     pass
             else:
@@ -371,10 +284,10 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                 # sleep(3)
                 try:
                     CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
-                    timed_out = wait_process(Timeout, CMD)
+                    timed_out = WaitOnProcesses(Timeout, CMD)
                     if timed_out:
-                        print_color(f'The command "{cmd}" is timed out!', theme['error'].Foreground(), theme['error'].Background())
-                    kill_alive_process(CMD)
+                        PrintColor(f'The command "{cmd}" is timed out!', theme['error'].Foreground(), theme['error'].Background())
+                    KillLiveProcesses(CMD)
                 except:
                     pass
             else:
@@ -391,9 +304,9 @@ def sh(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                 outputs += '\n' + P.stderr.text
         return P.returncode == 0, outputs
     except:
-        if get_makefile_var('Debug') is True:
-            from utility import Print_Exception
-            Print_Exception()
+        if config.debug is True:
+            from utility import PrintException
+            PrintException()
 
         return False, ''
 
@@ -406,12 +319,7 @@ def run(cmd, show_cmd=False, Highlight=False, Timeout=10):
     :param Timeout: (float) any positive number in seconds
     :return:
     """
-    if Highlight:
-        success, outputs = sh(cmd, show_cmd, True, Timeout)
-        hl_out = _Highlight_Outputs(outputs)
-        print(hl_out)
-    else:
-        success, outputs = sh(cmd, show_cmd, False, Timeout)
+    success, outputs = ShellAsync(cmd, show_cmd, False, Timeout)
 
     return success
 
