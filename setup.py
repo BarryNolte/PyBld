@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pybld",
-    install_requires=["sarge", "colorama", "better_exchook"],
+    install_requires=["sarge", "colorama"],
     packages=find_packages(exclude=['tests.py']),
     classifiers=[
         "Programming Language :: Python :: 3",

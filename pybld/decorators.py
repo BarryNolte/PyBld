@@ -10,11 +10,11 @@ def target(func):
     def decorator_func(*args, **kwargs):
         start_time = perf_counter()
 
+        # Call Decorated Function
         returnValue = func(*args, **kwargs)
 
         end_time = perf_counter()
         run_time = end_time - start_time
-        # print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
 
         if returnValue is None or returnValue is False:
             return False, run_time

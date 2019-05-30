@@ -34,6 +34,7 @@ class TargetObject(object):
         self.MakefileObj = MakefileObj
         self.Dependencies = args_var
         self.Status = TargetStatus.NOTRUN
+        self.Time = None
 
     def check_dependencies(self):
         indent = Indenter()
@@ -70,6 +71,7 @@ class TargetObject(object):
                 self.Status = TargetStatus.RUNFAIL
 
                 retV, time = self.func(*self.args_var)
+                self.Time = time
 
                 if not retV:
                     PrintColor(f'{crossMark}Target "{self.Name}" failed!', theme['error'].Foreground(), theme['error'].Background())
@@ -145,6 +147,9 @@ def DoMain():
 
     args = parser.parse_args()
 
+    if args.x:
+        print()
+
     # Does the make file exist?
     if not os.path.isfile(args.f):
         retV = input(f'No makefile exists!, do you want to create "{args.f}"? (y/n): ')
@@ -187,6 +192,11 @@ def DoMain():
 
     if config['PostMakeFunction'] is not None:
         config['PostMakeFunction']()
+
+    if retV:
+        retV = 0
+    else:
+        retV = 1
 
     return retV
 
