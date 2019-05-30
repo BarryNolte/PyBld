@@ -3,6 +3,7 @@ import sys
 import os
 import re
 import argparse
+from enum import Enum
 
 from pybld.utility import PrintColor, Indenter
 from pybld.make import Shell
@@ -12,21 +13,27 @@ from pybld.config import defaultMakefile
 from pybld.config import theme, crossMark, checkBox, config
 
 
+class TargetStatus(Enum):
+    NOTRUN = 1
+    RUNSUCCESS = 2
+    RUNFAIL = 3
+
+
 class TargetObject(object):
     '''Defines a target, and what it depends on '''
-    def __init__(self, func, args, MakefileObj, desc, pre, post):
+    def __init__(self, func, args, MakefileObj):
         self.Name = func
         self.func = getattr(MakefileObj, func)
+        # Do we need these around??
         args_str = [item.strip() for item in args.split(',')]
         args_var = [getattr(MakefileObj, item)
                     for item in args_str if item != '']
         self.args_str = args_str
         self.args_var = args_var
+        ####
         self.MakefileObj = MakefileObj
         self.Dependencies = args_var
-        self.Description = desc
-        self.PreFunction = pre
-        self.PostFunction = post
+        self.Status = TargetStatus.NOTRUN
 
     def check_dependencies(self):
         indent = Indenter()
@@ -60,15 +67,15 @@ class TargetObject(object):
             print()
             PrintColor(f'Executing Target "{self.Name}"', theme['target'].Foreground(), theme['target'].Background())
             try:
-                if len(self.args_var) == 0:
-                    retV = self.func()
-                else:
-                    retV = self.func(*self.args_var)
+                self.Status = TargetStatus.RUNFAIL
+
+                retV, time = self.func(*self.args_var)
 
                 if not retV:
                     PrintColor(f'{crossMark}Target "{self.Name}" failed!', theme['error'].Foreground(), theme['error'].Background())
                 else:
-                    PrintColor(f'{checkBox}Target "{self.Name}" succeded!', theme['success'].Foreground(), theme['success'].Background())
+                    self.Status = TargetStatus.RUNSUCCESS
+                    PrintColor(f'{checkBox}Target "{self.Name}" succeded! ({time:.4f} sec)', theme['success'].Foreground(), theme['success'].Background())
 
                 return retV
             except:
@@ -81,9 +88,9 @@ class TargetObject(object):
 
 
 def ParseMakefile(makefile_path, makefileObj):
-
+    '''Parse the makefile to find the targets'''
     def ParseTargetArgs(args):
-
+        '''Parse out the arguments to the target if there are any'''
         arglist = l.replace('@target', '').replace('(', '') \
             .replace(')', '').replace(',', ';').replace('; ', ';') \
             .replace("'", '').replace('"', '')
@@ -111,9 +118,9 @@ def ParseMakefile(makefile_path, makefileObj):
                 target_args = re.findall(r'def\s+\w+\s*\((.*)\)', makefile_lines[i + 1])
                 target_args = target_args[0]
 
-                desc, pre, post = ParseTargetArgs(l)
+                # desc, pre, post = ParseTargetArgs(l)
 
-                Targets[target_func] = TargetObject(target_func, target_args, makefileObj, desc, pre, post)
+                Targets[target_func] = TargetObject(target_func, target_args, makefileObj)
 
         # Detect Dependencies
         for key in Targets.keys():
@@ -158,7 +165,7 @@ def DoMain():
         PrintColor('Avalible Targets', theme['target'].Foreground(), theme['target'].Background())
         for target in Targets:
             t = Targets[target]
-            PrintColor(f'  {t.Name:10} - {t.Description}', theme['plain'].Foreground(), theme['plain'].Background())
+            PrintColor(f'  {t.Name}', theme['plain'].Foreground(), theme['plain'].Background())
         sys.exit()
 
     # Call this function before any make actions take place,
@@ -166,26 +173,22 @@ def DoMain():
     if config['PreMakeFunction'] is not None:
         config['PreMakeFunction']()
 
-    # If we have a target, execute it
-    if args.t:
-        try:
-            selected_Target = Targets[args.t.strip()]  # type: TargetObject
-        except:
-            PrintColor(f'Error: target function "{args.t}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
-            if config['debug'] is True:
-                traceback.PrintException()
-            sys.exit()
+    # If we have targets, execute them
+    retV = False
+    targ = args.target[0]
 
+    selected_Target = Targets.get(targ)  # type: TargetObject
+
+    if selected_Target:
         retV = selected_Target.run()
-
-        if retV is True:
-            if config['PostMakeFunction'] is not None:
-                config['PostMakeFunction']()
-        return retV
-
     else:
-        PrintColor(f'No target to build, exiting...', theme['warning'].Foreground(), theme['warning'].Background())
+        PrintColor(f'Error: target function "{selected_Target.Name}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
         sys.exit()
+
+    if config['PostMakeFunction'] is not None:
+        config['PostMakeFunction']()
+
+    return retV
 
 
 if __name__ == '__main__':

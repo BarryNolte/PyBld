@@ -38,34 +38,6 @@ def find(root='./', filter='*', recursive=False, abslute=False, DirOnly=False):
     return srcfiles
 
 
-def get_dir(path):
-    if type(path) is str:
-        dir_str = os.path.dirname(path)
-        return dir_str
-    elif type(path) is list:
-        retPaths = []
-        for p in path:
-            dir_str = os.path.dirname(p)
-            retPaths.append(dir_str)
-        return retPaths
-    else:
-        return None
-
-
-def get_filename(path):
-    if type(path) is str:
-        dir_str = os.path.basename(path)
-        return dir_str
-    elif type(path) is list:
-        retPaths = []
-        for p in path:
-            dir_str = os.path.basename(p)
-            retPaths.append(dir_str)
-        return retPaths
-    else:
-        return None
-
-
 def compile(compiler, flags, sources, objects):
     PrintColor('Compiling ...', theme['target'].Foreground(), theme['target'].Background())
 
@@ -181,36 +153,6 @@ def archive(archiver, flags, objects, library):
         return True
 
 
-def normpaths(paths):
-    if type(paths) is str:
-        dir_str = os.path.normpath(paths)
-        return dir_str
-    elif type(paths) is list:
-        retPaths = []
-        for p in paths:
-            dir_str = os.path.normpath(p)
-            retPaths.append(dir_str)
-        return retPaths
-    else:
-        return None
-
-
-def join(*args):
-    try:
-        retV = ' '.join(args)  # this works if all args are str type
-        return retV
-    except:  # deal with different types
-        retV = ''
-        for arg in args:
-            if type(arg) is list:
-                argItems = ' '.join(arg)
-                retV += argItems + ' '
-
-            else:  # assume str
-                retV += arg + ' '
-        return retV
-
-
 def replace(srclist, term, repwith):
     if type(srclist) is list:
         retV = []
@@ -245,16 +187,9 @@ def retarget(srclist, targetP, omit=''):
         return retV
 
 
-def exclude(original, ignors):
-    retV = []
-    for item in original:
-        if item not in ignors:
-            retV.append(item)
-    return retV
-
-
 def Shell(cmd):
-    '''Run cmd in the shell returning the output
+    '''
+    Run cmd in the shell returning the output
     :param cmd: (str) command to run in the available shell
     :return: (str) returns the generated text from the shell command
     '''
@@ -324,23 +259,3 @@ def run(cmd, show_cmd=False, Timeout=10):
     success, outputs = ShellAsync(cmd, show_cmd, False, Timeout)
 
     return success
-
-
-def target(desc='', preFunc=None, postFunc=None):
-    """
-    This is a decorator function
-    :param func:
-    :return:
-    """
-    def decorator_func(func):
-        def wrapper(*original_args, **original_kwargs):
-            # print 'before the func'
-            # print original_kwargs
-            retV = func(*original_args, **original_kwargs)
-            if retV is None or retV is False:
-                return False
-            else:
-                return True
-            # print 'after the func'
-        return wrapper
-    return decorator_func
