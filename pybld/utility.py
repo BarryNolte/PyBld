@@ -2,28 +2,10 @@
 from colorama import Fore, Back, Style
 from time import time, sleep
 from traceback import print_exc
-from inspect import stack
-
-
-def get_makefile_var(var_str):
-    # TODO: this is a hack at best
-    """
-    :param var_str: str
-    :return:
-    """
-    outerframe = stack()[1][0]
-    outerframe = outerframe.f_back.f_back
-    outerframeGlobals = outerframe.f_globals
-
-    try:
-        var = outerframeGlobals[var_str]
-        return var
-    except:
-        return None
 
 
 def PrintException():
-    PrintColor('Crash: (Program Exception)', Fore.WHITE, Back.LIGHTGREEN_EX)
+    PrintColor('Crash: (Program Exception)', Fore.BLACK, Back.LIGHTGREEN_EX)
     print_exc()
 
 

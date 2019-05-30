@@ -9,14 +9,12 @@ from pybld.make import Shell
 
 from pybld.makefile_template import gccTemplate
 from pybld.config import defaultMakefile
-from pybld.config import theme, crossMark, checkBox
-
-# TODO: Should be in a class
-Debug = True
+from pybld.config import theme, crossMark, checkBox, config
 
 
 class TargetObject(object):
-    def __init__(self, func, args, MakefileObj):
+    '''Defines a target, and what it depends on '''
+    def __init__(self, func, args, MakefileObj, desc, pre, post):
         self.Name = func
         self.func = getattr(MakefileObj, func)
         args_str = [item.strip() for item in args.split(',')]
@@ -26,6 +24,9 @@ class TargetObject(object):
         self.args_var = args_var
         self.MakefileObj = MakefileObj
         self.Dependencies = args_var
+        self.Description = desc
+        self.PreFunction = pre
+        self.PostFunction = post
 
     def check_dependencies(self):
         indent = Indenter()
@@ -72,14 +73,31 @@ class TargetObject(object):
                 return retV
             except:
                 PrintColor(f'Internal error in the target function "{self.Name}"', theme['error'].Foreground(), theme['error'].Background())
-                if Debug:
-                    traceback.print_exc()
+                if config['debug']:
+                    traceback.PrintException()
 
         else:
             return False
 
 
-def Parse_Makefile(makefile_path, makefileObj):
+def ParseMakefile(makefile_path, makefileObj):
+
+    def ParseTargetArgs(args):
+
+        arglist = l.replace('@target', '').replace('(', '') \
+            .replace(')', '').replace(',', ';').replace('; ', ';') \
+            .replace("'", '').replace('"', '')
+
+        argdict = {}
+        if arglist:
+            argdict = dict(item.split("=") for item in arglist.split(";"))
+
+        desc = argdict.get('desc', '')
+        pre = argdict.get('preFunc', None)
+        post = argdict.get('postFunc', None)
+
+        return desc, pre, post
+
     Targets = {}  # type: dict[str, TargetObject]
     if os.path.isfile(makefile_path):
         with open(makefile_path, 'r') as f:
@@ -92,8 +110,10 @@ def Parse_Makefile(makefile_path, makefileObj):
                 target_func = target_func[0]
                 target_args = re.findall(r'def\s+\w+\s*\((.*)\)', makefile_lines[i + 1])
                 target_args = target_args[0]
-                TargetV = TargetObject(target_func, target_args, makefileObj)
-                Targets[target_func] = TargetV
+
+                desc, pre, post = ParseTargetArgs(l)
+
+                Targets[target_func] = TargetObject(target_func, target_args, makefileObj, desc, pre, post)
 
         # Detect Dependencies
         for key in Targets.keys():
@@ -107,16 +127,14 @@ def Parse_Makefile(makefile_path, makefileObj):
     return Targets
 
 
-def do_main():
-    global Debug
+def DoMain():
 
     # Parse Command Line
-    parser = argparse.ArgumentParser(description='PyBld is a simple make system implemented in python')
-    parser.add_argument('-t', metavar='    Target', help='Make target in the makefile', default='all')
-    parser.add_argument('-f', metavar='    Makefile', help=f'Explicit path to makefile, default = {defaultMakefile}', default=defaultMakefile)
-    parser.add_argument('-j', metavar='    Jobs', type=int, help='Number of jobs used in the make process')
-    parser.add_argument('-v', metavar="    Verbose", type=bool, help='Verbose output', default=False)
-    parser.add_argument('-debug', metavar="Debug", type=bool, help='Create output suitable to debug a makefile', default=False)
+    parser = argparse.ArgumentParser(description='PyBld is a simple make system implemented in python.', allow_abbrev=True)
+    parser.add_argument('-l', help=f'List available targets in make file.', action='store_true')
+    parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
+    parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
+    parser.add_argument('target', metavar='Target', nargs='*', help='Make target in the makefile.', default=['all'])
 
     args = parser.parse_args()
 
@@ -129,21 +147,24 @@ def do_main():
                 f.write(tempText)
         sys.exit()
 
-    # TODO: ???
-    # pkgdir = os.path.normpath(os.path.dirname(__file__) + '/../')
-    # sys.path.insert(0, pkgdir)
-    # if os.path.exists('/opt/PyBld'):
-    #    sys.path.insert(0, '/opt/')
-
     import imp
     makefileObj = imp.load_source('makefileObj', args.f)
     Shell('rm -f *.pyc')
 
-    # TODO: Make this into a configuration class??
-    Debug = getattr(makefileObj, 'Debug', False)
-
     # Get list of possible targets
-    Targets = Parse_Makefile(args.f, makefileObj)
+    Targets = ParseMakefile(args.f, makefileObj)
+
+    if args.l:
+        PrintColor('Avalible Targets', theme['target'].Foreground(), theme['target'].Background())
+        for target in Targets:
+            t = Targets[target]
+            PrintColor(f'  {t.Name:10} - {t.Description}', theme['plain'].Foreground(), theme['plain'].Background())
+        sys.exit()
+
+    # Call this function before any make actions take place,
+    # must be called after the make file is loaded
+    if config['PreMakeFunction'] is not None:
+        config['PreMakeFunction']()
 
     # If we have a target, execute it
     if args.t:
@@ -151,11 +172,15 @@ def do_main():
             selected_Target = Targets[args.t.strip()]  # type: TargetObject
         except:
             PrintColor(f'Error: target function "{args.t}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
-            if Debug:
-                traceback.print_exc()
+            if config['debug'] is True:
+                traceback.PrintException()
             sys.exit()
 
         retV = selected_Target.run()
+
+        if retV is True:
+            if config['PostMakeFunction'] is not None:
+                config['PostMakeFunction']()
         return retV
 
     else:
@@ -165,4 +190,4 @@ def do_main():
 
 if __name__ == '__main__':
     # Tests
-    do_main()
+    DoMain()

@@ -3,9 +3,9 @@
 import os
 import sarge
 
-from pybld.utility import Fore, PrintColor, crossMark
+from pybld.utility import Fore, PrintColor
 from pybld.utility import KillLiveProcesses, WaitOnProcesses
-
+from pybld.config import crossMark
 from pybld.config import theme, config
 
 import fnmatch
@@ -254,7 +254,10 @@ def exclude(original, ignors):
 
 
 def Shell(cmd):
-    '''Run cmd in the shell returning the output'''
+    '''Run cmd in the shell returning the output
+    :param cmd: (str) command to run in the available shell
+    :return: (str) returns the generated text from the shell command
+    '''
     P = sarge.run(cmd, shell=True, stdout=sarge.Capture())
     return P.stdout.text
 
@@ -304,18 +307,17 @@ def ShellAsync(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
                 outputs += '\n' + P.stderr.text
         return P.returncode == 0, outputs
     except:
-        if config.debug is True:
+        if config['debug'] is True:
             from utility import PrintException
             PrintException()
 
         return False, ''
 
 
-def run(cmd, show_cmd=False, Highlight=False, Timeout=10):
+def run(cmd, show_cmd=False, Timeout=10):
     """
     :param cmd: (str) the shell command
     :param show_cmd: (bool) print the command before executing it
-    :param Highlight: (bool) apply color highlights for the outputs
     :param Timeout: (float) any positive number in seconds
     :return:
     """
@@ -324,21 +326,21 @@ def run(cmd, show_cmd=False, Highlight=False, Timeout=10):
     return success
 
 
-def target(func):
-    # TODO: Add pre/post functions??
+def target(desc='', preFunc=None, postFunc=None):
     """
     This is a decorator function
     :param func:
     :return:
     """
-    def target_func(*original_args, **original_kwargs):
-        # print 'before the func'
-        # print original_kwargs
-        retV = func(*original_args, **original_kwargs)
-        if retV is None or retV is False:
-            return False
-        else:
-            return True
-        # print 'after the func'
-
-    return target_func
+    def decorator_func(func):
+        def wrapper(*original_args, **original_kwargs):
+            # print 'before the func'
+            # print original_kwargs
+            retV = func(*original_args, **original_kwargs)
+            if retV is None or retV is False:
+                return False
+            else:
+                return True
+            # print 'after the func'
+        return wrapper
+    return decorator_func

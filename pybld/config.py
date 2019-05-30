@@ -4,14 +4,13 @@ defaultMakefile = './makefile.py'
 
 config = {
     'debug': False,
-    'name': 'main.exe',
+    'PreMakeFunction': None,
+    'PostMakeFunction': None,
     'cflags': [],
     'lflags': [],
 
     'includepaths': [],
-
     'libpaths': [],
-
     'libs': [],
 
     'bindir': 'bin',
@@ -42,6 +41,7 @@ theme = {
     'error': ColorPair(Fore.RED, Back.BLACK),
     'warning': ColorPair(Fore.YELLOW),
     'info': ColorPair(Fore.LIGHTGREEN_EX, Back.BLUE),
+    'plain': ColorPair(Fore.LIGHTWHITE_EX),
     'verbose': ColorPair(Fore.WHITE),
     'target': ColorPair(Style.UNDERLINE + Fore.LIGHTGREEN_EX),
     'success': ColorPair(Fore.GREEN),
