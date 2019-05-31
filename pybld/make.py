@@ -1,12 +1,11 @@
 """Make functions for PyBld"""
 
 import os
-import sarge
 
 from pybld.utility import Fore, PrintColor
-from pybld.utility import KillLiveProcesses, WaitOnProcesses
 from pybld.config import crossMark
-from pybld.config import theme, config
+from pybld.config import theme
+from pybld.jobs import Shell
 
 import fnmatch
 
@@ -77,7 +76,7 @@ def compile(compiler, flags, sources, objects):
                 os.makedirs(objDir)
 
         PrintColor(f'Compiling: {item}', theme['target'].Foreground(), theme['target'].Background())
-        success, outputs = ShellAsync(cmd, True)
+        success, outputs = Shell(cmd, True)
         print(outputs)
 
         if not success:
@@ -108,7 +107,7 @@ def link(linker, flags, objects, executable):
     if linkFlag:
         PrintColor('Linking ...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{linker} {flags} {objs} -o {executable}'
-        success, outputs = ShellAsync(cmd, True)
+        success, outputs = Shell(cmd, True)
         print(outputs)
 
         if not success:
@@ -141,7 +140,7 @@ def archive(archiver, flags, objects, library):
     if not satisfactionFlag:
         PrintColor('Archiving...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{archiver} {flags} {library} {objs}'
-        success, outputs = ShellAsync(cmd, True)
+        success, outputs = Shell(cmd, True)
         print(outputs)
 
         if not success:
@@ -185,77 +184,3 @@ def retarget(srclist, targetP, omit=''):
         x = os.path.normpath(x)
         retV = x
         return retV
-
-
-def Shell(cmd):
-    '''
-    Run cmd in the shell returning the output
-    :param cmd: (str) command to run in the available shell
-    :return: (str) returns the generated text from the shell command
-    '''
-    P = sarge.run(cmd, shell=True, stdout=sarge.Capture())
-    return P.stdout.text
-
-
-def ShellAsync(cmd, show_cmd=False, CaptureOutput=False, Timeout=-1):
-    if show_cmd:
-        print(cmd)
-    try:
-        if CaptureOutput:
-            if Timeout > -1:
-                P = sarge.run(cmd, shell=True, stdout=sarge.Capture(), stderr=sarge.Capture(), async_=True)
-                sarge.join()
-                # sleep(3)
-                try:
-                    CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
-                    timed_out = WaitOnProcesses(Timeout, CMD)
-                    if timed_out:
-                        PrintColor(f'The command "{cmd}" has timed out!', theme['error'].Foreground(), theme['error'].Background())
-                    KillLiveProcesses(CMD)
-                except:
-                    pass
-            else:
-                P = sarge.run(cmd, shell=True, stdout=sarge.Capture(), stderr=sarge.Capture())
-        else:
-            if Timeout > -1:
-                P = sarge.run(cmd, shell=True, async_=True)
-                # sleep(3)
-                try:
-                    CMD = P.commands[0]  # type: sarge.Command # FIXME: This line generates index exception sometime
-                    timed_out = WaitOnProcesses(Timeout, CMD)
-                    if timed_out:
-                        PrintColor(f'The command "{cmd}" is timed out!', theme['error'].Foreground(), theme['error'].Background())
-                    KillLiveProcesses(CMD)
-                except:
-                    pass
-            else:
-                P = sarge.run(cmd, shell=True)
-
-        outputs = ''
-
-        if P.stdout and len(P.stdout.text) > 0:
-            outputs = P.stdout.text
-        if P.stderr and len(P.stderr.text) > 0:
-            if outputs == '':
-                outputs = P.stderr.text
-            else:
-                outputs += '\n' + P.stderr.text
-        return P.returncode == 0, outputs
-    except:
-        if config['debug'] is True:
-            from utility import PrintException
-            PrintException()
-
-        return False, ''
-
-
-def run(cmd, show_cmd=False, Timeout=10):
-    """
-    :param cmd: (str) the shell command
-    :param show_cmd: (bool) print the command before executing it
-    :param Timeout: (float) any positive number in seconds
-    :return:
-    """
-    success, outputs = ShellAsync(cmd, show_cmd, False, Timeout)
-
-    return success

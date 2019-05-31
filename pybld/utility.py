@@ -1,6 +1,5 @@
 '''Utility functions for PyBld '''
 from colorama import Fore, Back, Style
-from time import time, sleep
 from traceback import print_exc
 
 
@@ -11,38 +10,6 @@ def PrintException():
 
 def PrintColor(txt, fg='', bg='', bold=False):
     print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}")
-
-
-def WaitOnProcesses(Timeout, Proc, Print_statusTime=-1):
-    cindex = 0
-    timeStep = 0.1
-    sec_count = 1.0
-    CountDown = Timeout
-
-    T1 = time()
-    tdiff = time() - T1
-    while tdiff < Timeout:
-        alive = Proc.poll()
-        if alive is not None:
-            print('\r                          \r')
-            return False
-        sleep(timeStep)
-        sec_count -= timeStep
-        tdiff = time() - T1
-        CountDown = int(Timeout - tdiff)
-        if tdiff >= Print_statusTime and sec_count <= 0:
-            sec_count = 1.0
-            if cindex == 0:
-                print('\r                          \r')
-                PrintColor('\rwaiting... [%d]' % CountDown, bg=Back.YELLOW)
-                cindex = 1
-            else:
-                print('\r                          \r')
-                PrintColor('\rwaiting... [%d]' % CountDown, bg=Back.CYAN)
-                cindex = 0
-
-    print('\r          \r')
-    return True  # The Process is Timed Out
 
 
 def Highlight_Custom(txt, pattern, color):
@@ -66,15 +33,6 @@ def Highlight_Custom(txt, pattern, color):
     return retV
 
 
-def KillLiveProcesses(Proc):
-    alive = Proc.poll()
-    if alive is None:
-        try:
-            Proc.kill()
-        except:
-            pass
-
-
 indent = 0
 
 
@@ -93,11 +51,6 @@ class Indenter():
         return indent
 
 
-def foo():
-    Indenter()
-
-
 if __name__ == '__main__':
     '''Test Functions'''
     print(Highlight_Custom('foo bar baz', 'bar', [Fore.GREEN, Back.YELLOW]))
-    foo()

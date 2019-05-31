@@ -31,7 +31,7 @@ class ColorPair:
         return self.fg
 
 ####
-# For later use, termcolor package
+# For later use, termcolor package or terminal-palette
 # print_red_on_cyan = lambda x: cprint(x, 'red', 'on_cyan')
 # print_red_on_cyan('Hello, World!')
 # print_red_on_cyan('Hello, Universe!')

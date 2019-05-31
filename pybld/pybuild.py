@@ -1,4 +1,3 @@
-import traceback
 import sys
 import os
 import re
@@ -6,7 +5,7 @@ import argparse
 from enum import Enum
 
 from pybld.utility import PrintColor, Indenter
-from pybld.make import Shell
+from pybld.jobs import Shell
 
 from pybld.makefile_template import gccTemplate
 from pybld.config import defaultMakefile
@@ -82,8 +81,7 @@ class TargetObject(object):
                 return retV
             except:
                 PrintColor(f'Internal error in the target function "{self.Name}"', theme['error'].Foreground(), theme['error'].Background())
-                if config['debug']:
-                    traceback.PrintException()
+                raise
 
         else:
             return False
@@ -136,6 +134,23 @@ def ParseMakefile(makefile_path, makefileObj):
     return Targets
 
 
+def CreateMakefile(filename):
+    retV = input(f'Makefile does not exist, do you want to create "{filename}"? (y/n): ')
+    if retV.lower() == 'y':
+        tempText = str(gccTemplate)
+        with open(filename, 'w') as f:
+            f.write(tempText)
+    sys.exit()
+
+
+def PrintTargets(targets):
+    PrintColor('Avalible Targets', theme['target'].Foreground(), theme['target'].Background())
+    for target in targets:
+        t = targets[target]
+        PrintColor(f'  {t.Name}', theme['plain'].Foreground(), theme['plain'].Background())
+    sys.exit()
+
+
 def DoMain():
 
     # Parse Command Line
@@ -147,18 +162,11 @@ def DoMain():
 
     args = parser.parse_args()
 
-    if args.x:
-        print()
-
-    # Does the make file exist?
+    # Does the makefile exist?
     if not os.path.isfile(args.f):
-        retV = input(f'No makefile exists!, do you want to create "{args.f}"? (y/n): ')
-        if retV.lower() == 'y':
-            tempText = str(gccTemplate)
-            with open(args.f, 'w') as f:
-                f.write(tempText)
-        sys.exit()
+        CreateMakefile(args.f)
 
+    # import the makefile so we can use it
     import imp
     makefileObj = imp.load_source('makefileObj', args.f)
     Shell('rm -f *.pyc')
@@ -166,39 +174,33 @@ def DoMain():
     # Get list of possible targets
     Targets = ParseMakefile(args.f, makefileObj)
 
+    # Print targets if requested, then exit
     if args.l:
-        PrintColor('Avalible Targets', theme['target'].Foreground(), theme['target'].Background())
-        for target in Targets:
-            t = Targets[target]
-            PrintColor(f'  {t.Name}', theme['plain'].Foreground(), theme['plain'].Background())
-        sys.exit()
+        PrintTargets(Targets)
 
     # Call this function before any make actions take place,
     # must be called after the make file is loaded
     if config['PreMakeFunction'] is not None:
         config['PreMakeFunction']()
 
+    # =======================================================================
     # If we have targets, execute them
-    retV = False
-    targ = args.target[0]
 
-    selected_Target = Targets.get(targ)  # type: TargetObject
+    for targ in args.target:
+        selected_Target = Targets.get(targ)  # type: TargetObject
 
-    if selected_Target:
-        retV = selected_Target.run()
-    else:
-        PrintColor(f'Error: target function "{selected_Target.Name}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
-        sys.exit()
+        if selected_Target and selected_Target.Status == TargetStatus.NOTRUN:
+            selected_Target.run()
+        else:
+            PrintColor(f'Error: target function "{selected_Target.Name}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
+            sys.exit(1)
+
+    # =======================================================================
 
     if config['PostMakeFunction'] is not None:
         config['PostMakeFunction']()
 
-    if retV:
-        retV = 0
-    else:
-        retV = 1
-
-    return retV
+    return 0
 
 
 if __name__ == '__main__':

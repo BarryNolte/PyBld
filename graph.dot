@@ -1,0 +1,20 @@
+
+digraph {
+    label="My Graph";
+    rankdir=BT;
+    All[color="red"];
+    { 
+        rank = same;
+            "Tprint"; 
+            "Tprint1"; 
+    };
+    Tlink [shape=box,style=filled,color=".4 .5 1.0"];
+    Tcompile [shape=polygon, sides=6, peripheries=3, port=w]
+    All  -> Tlink [color=blue]
+    Tlink -> Tprint 
+    Tprint1 -> Tcompile
+    edge [color=red, style=dotted]
+    Tlink -> Tcompile
+    Tprint -> Tprint1
+    Tlink -> Tprint1 [color=magenta, style=solid]
+}

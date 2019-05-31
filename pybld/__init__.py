@@ -1,11 +1,13 @@
 
 # TODO - Clean up imports so the right things are exported :)
-from .make import ( find, replace, retarget, 
-                    compile, link, archive, run)
+from .make import find, replace, retarget, compile, link, archive
 from .decorators import target
 from .utility import Fore, Back, PrintColor
 from .pybuild import *
 from .config import config, theme
+from .jobs import Shell, ShellAsync
+from .fileops import *
+from .environment import *
 
 # Get better exception information
 def global_exception_hook(type, value, tb):
@@ -13,6 +15,7 @@ def global_exception_hook(type, value, tb):
     Y = Fore.YELLOW
     C = Fore.CYAN
     N = Fore.RESET
+    
     print(f'==========================================')
     print(f'=       {R}PyBld E x c e p t i o n{N}          =')
     print(f'==========================================')
@@ -20,25 +23,21 @@ def global_exception_hook(type, value, tb):
     print(f' Type  : {Y}{type}{N}')
     print(f' Value : {Y}{value}{N}')
     
+    import traceback
     tbList = traceback.extract_tb(tb)
 
-    startOfMyCode = 0
-    for i, e in reversed(list(enumerate(tbList))):
-        if e.name == '<module>':
-            startOfMyCode = i
-            break
-    
     print(f'{C}')
-    print(f'  Function Name    Line   Code                       File Name')
-    print(f'-----------------|------|--------------------------|----------------------------')
+    print(f'    Function Name    Line   Code                       File Name')
+    print(f'  -----------------|------|--------------------------|----------------------------')
     print(f'{N}')
-    lastItem = len(tbList)
+    
     hightLight = ''
-    for idx in range(startOfMyCode, lastItem):
-        frame = tbList[idx]
-        if idx == lastItem - 1:
+    crash = '   '
+    for frame in tbList:
+        if frame is tbList[-1]:
             hightLight = R
-        print(f'  {frame.name:15} {Y}{frame.lineno:-5}{N}   {hightLight}{frame.line:25}{N}  {frame.filename}')
+            crash = crossMark
+        print(f'{crash} {frame.name:15} {Y}{frame.lineno:-5}{N}   {hightLight}{frame.line:25}{N}  {frame.filename}')
         
     print('')
     sys.exit(1)

@@ -5,9 +5,9 @@
 * PyPi classifiers
 * Copyright and license issues
 * Readme file
-* Markdown graph output
+* Update template
+* GraphViz graph output
 
-```mermaid
 graph TD;
     All-->Tlink;
     Tlink-->Tprint;
@@ -15,13 +15,21 @@ graph TD;
     Tlink-->Tcompile;
     Tprint-->Tprint1;
     Tlink-->Tprint1;
-```
 
-* Update template
 * single items vs. lists of items (can we make a list of one and have it make sense)
-* Environment get/set to pass info between makefiles
 * Make sh() run a list of proc's that can be joined later
+  * Shell - return pass/fail, return code, output text
+  * ShellAsync - return handle
+  * WaitForShellAsync - pass in handle, waits, returns pass/fail, return code, output text
+  * 
+  * ShellListAsync ??
+  * ShellList ??
 
 ### *FEATURES*
-* Give actual linenumber/filename on errors in make file
+* Environment get/set to pass info between makefiles
+* 
+  
+### *TESTS*
+* Single input
+* List of imputs
 * 

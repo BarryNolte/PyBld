@@ -4,5 +4,10 @@
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
     "editor.tabSize": 4,
-    "python.linting.flake8Args": ["--ignore=E722,E501", "--exclude=__init__.py"]
+    "python.linting.flake8Args": [
+        "--ignore=E722,E501",
+        "--exclude=__init__.py"
+    ],
+    "graphvizPreview.engine": "dot",
+    "graphvizPreview.dotPath": "/usr/local/bin/dot"
 }
