@@ -5,6 +5,7 @@ import time
 from tabulate import tabulate
 from enum import Enum
 from pybld.fileops import CurrentWorkingDirectory, MakeDirectory, GetModifyTime
+from config import Fore
 
 
 class MakeStatus(Enum):
@@ -74,7 +75,9 @@ class TargetFileList(object):
                 dtTar = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tf.TargetTime))
             table.append([src, dtSrc, tar, dtTar, tf.MakeStatus])
 
-        print(tabulate(table, headers=['Source', 'Source Time', 'Target', 'Target Time', 'Make Status'], tablefmt="psql"))
+        Y = Fore.YELLOW
+        N = Fore.RESET
+        print(tabulate(table, headers=[f'{Y}Source{N}', f'{Y}Source Time{N}', f'{Y}Target{N}', f'{Y}Target Time{N}', f'{Y}Make Status{N}'], tablefmt="psql"))
 
 
 if __name__ == '__main__':

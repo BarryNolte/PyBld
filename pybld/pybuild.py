@@ -3,7 +3,7 @@ import os
 import re
 import argparse
 
-from pybld.utility import PrintColor
+from pybld.utility import PrintColor, Fore
 from pybld.jobs import Shell
 
 from pybld.makefile_template import gccTemplate
@@ -73,9 +73,13 @@ def CreateMakefile(filename):
 def PrintTargets(targets):
     t = []
     for target in targets:
-        t.append(targets[target])
+        s = []
+        s.append(target)
+        t.append(s)
 
-    print(tabulate(t, headers=['Avalible Targets']))
+    Y = Fore.YELLOW
+    N = Fore.RESET
+    print(tabulate(t, headers=[f'{Y}Avalible Targets{N}'], tablefmt="psql"))
     sys.exit()
 
 
