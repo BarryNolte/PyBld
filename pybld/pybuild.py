@@ -71,15 +71,23 @@ def CreateMakefile(filename):
 
 
 def PrintTargets(targets):
-    t = []
+    table = []
     for target in targets:
-        s = []
-        s.append(target)
-        t.append(s)
+        row = []
+        dep = ''
+        for depTarget in targets[target].Dependencies:
+            if type(depTarget) is TargetObject:
+                dep += ' -> ' + depTarget.Name
+            elif type(depTarget) is list:
+                for fn in depTarget:
+                    dep += fn + ' '
+        row.append(target)
+        row.append(dep)
+        table.append(row)
 
     Y = Fore.YELLOW
     N = Fore.RESET
-    print(tabulate(t, headers=[f'{Y}Avalible Targets{N}'], tablefmt="psql"))
+    print(tabulate(table, headers=[f'{Y}Avalible Targets{N}', f'{Y}Depends On{N}'], tablefmt="psql"))
     sys.exit()
 
 

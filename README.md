@@ -6,7 +6,7 @@
 * Copyright and license issues
 * Readme file
 * Update template
-* GraphViz graph output
+* GraphViz dot graph output
 
 graph TD;
     All-->Tlink;
@@ -16,6 +16,7 @@ graph TD;
     Tprint-->Tprint1;
     Tlink-->Tprint1;
 
+* Fix the story on colors, colorama is a bit... much
 * single items vs. lists of items (can we make a list of one and have it make sense)
 * Make Shell* run a list of proc's that can be joined later
   * Shell - return pass/fail, return code, output text
