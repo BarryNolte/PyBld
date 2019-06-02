@@ -24,3 +24,16 @@ def Touch(name):
 
 def GetDirectoryFiles(path):
     return os.listdir(path)
+
+
+def ChangeDirectory(path):
+    return os.chdir(path)
+
+
+def GetModifyTime(path):
+    try:
+        return os.path.getmtime(path)
+    except os.error:
+        pass
+
+    return None

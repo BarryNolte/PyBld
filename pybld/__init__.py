@@ -1,8 +1,9 @@
 
 # TODO - Clean up imports so the right things are exported :)
-from .make import find, replace, retarget, compile, link, archive
+from .make import find, replace, retarget, compile, link
 from .decorators import target
 from .utility import Fore, Back, PrintColor
+from .config import crossMark
 from .pybuild import *
 from .config import config, theme
 from .jobs import Shell, ShellAsync

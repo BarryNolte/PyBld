@@ -76,7 +76,7 @@ def compile(compiler, flags, sources, objects):
                 os.makedirs(objDir)
 
         PrintColor(f'Compiling: {item}', theme['target'].Foreground(), theme['target'].Background())
-        success, outputs = Shell(cmd, True)
+        success, retcode, outputs = Shell(cmd, True)
         print(outputs)
 
         if not success:
@@ -107,44 +107,11 @@ def link(linker, flags, objects, executable):
     if linkFlag:
         PrintColor('Linking ...', theme['target'].Foreground(), theme['target'].Background())
         cmd = f'{linker} {flags} {objs} -o {executable}'
-        success, outputs = Shell(cmd, True)
+        success, retcode, outputs = Shell(cmd, True)
         print(outputs)
 
         if not success:
             PrintColor(f"Failed to link object files to assemble '{executable}'", theme['error'].Foreground(), theme['error'].Background())
-            return False
-        else:
-            return True
-    else:
-        return True
-
-
-def archive(archiver, flags, objects, library):
-    if type(objects) is list:
-        objs = ' '.join(objects)
-    else:
-        objs = objects
-
-    objectsList = objs.split()
-
-    satisfactionFlag = False
-    if os.path.isfile(library):
-        satisfactionFlag = True
-        output_mTime = os.path.getmtime(library)
-        for obj in objectsList:
-            obj_mtime = os.path.getmtime(obj)
-            if obj_mtime > output_mTime:
-                satisfactionFlag = False
-                break
-
-    if not satisfactionFlag:
-        PrintColor('Archiving...', theme['target'].Foreground(), theme['target'].Background())
-        cmd = f'{archiver} {flags} {library} {objs}'
-        success, outputs = Shell(cmd, True)
-        print(outputs)
-
-        if not success:
-            PrintColor(f"Failed to archive object files to assemble '{library}'", Fore.RED)
             return False
         else:
             return True

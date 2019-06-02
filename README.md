@@ -17,19 +17,16 @@ graph TD;
     Tlink-->Tprint1;
 
 * single items vs. lists of items (can we make a list of one and have it make sense)
-* Make sh() run a list of proc's that can be joined later
+* Make Shell* run a list of proc's that can be joined later
   * Shell - return pass/fail, return code, output text
   * ShellAsync - return handle
-  * WaitForShellAsync - pass in handle, waits, returns pass/fail, return code, output text
+  * ShellWaitForAsync - pass in handle, waits, returns pass/fail, return code, output text
   * 
-  * ShellListAsync ??
-  * ShellList ??
 
 ### *FEATURES*
-* Environment get/set to pass info between makefiles
 * 
   
 ### *TESTS*
 * Single input
-* List of imputs
+* List of inputs
 * 

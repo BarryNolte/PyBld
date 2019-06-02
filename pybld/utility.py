@@ -33,22 +33,16 @@ def Highlight_Custom(txt, pattern, color):
     return retV
 
 
-indent = 0
-
-
 class Indenter():
 
     def __init__(self):
-        global indent
-        indent += 1
+        self.indent = 1
 
     def __del__(self):
-        global indent
-        indent -= 1
+        self.indent -= 1
 
     def GetIndent(self):
-        global indent
-        return indent
+        return self.indent
 
 
 if __name__ == '__main__':

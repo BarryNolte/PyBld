@@ -17,7 +17,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pybld",
-    install_requires=["sarge", "colorama"],
+    install_requires=["sarge", "colorama", "tabulate"],
     packages=find_packages(exclude=['tests.py']),
     classifiers=[
         "Development Status :: 3 - Alpha",
