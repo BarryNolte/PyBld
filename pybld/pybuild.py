@@ -144,5 +144,4 @@ def DoMain():
 
 
 if __name__ == '__main__':
-    # Tests
     DoMain()
