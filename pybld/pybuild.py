@@ -91,15 +91,24 @@ def PrintTargets(targets):
     sys.exit()
 
 
+class CapitalisedHelpFormatter(argparse.HelpFormatter):
+    def add_usage(self, usage, actions, groups, prefix=None):
+        if prefix is None:
+            prefix = f'{Fore.YELLOW}usage: {Fore.RESET}'
+        return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
+
+
 def DoMain():
 
     # Parse Command Line
-    parser = argparse.ArgumentParser(description='PyBld is a simple make system implemented in python.', allow_abbrev=True)
+    parser = argparse.ArgumentParser(description=f'{Fore.CYAN}PyBld is a simple make system implemented in python.{Fore.RESET}', formatter_class=CapitalisedHelpFormatter)
+    parser._positionals.title = f'{Fore.YELLOW}positional arguments:{Fore.RESET}'
+    parser._optionals.title = f'{Fore.YELLOW}optional arguments:{Fore.RESET}'
     parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
-    parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
+    # parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
     parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
-    parser.add_argument('target', metavar='Target', nargs='*', help='Make target in the makefile.', default=['all'])
+    parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.', default=['all'])
 
     args = parser.parse_args()
 
