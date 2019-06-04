@@ -95,12 +95,22 @@ def DoMain():
 
     # Parse Command Line
     parser = argparse.ArgumentParser(description='PyBld is a simple make system implemented in python.', allow_abbrev=True)
-    parser.add_argument('-l', help=f'List available targets in make file.', action='store_true')
+    parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
+    parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
     parser.add_argument('target', metavar='Target', nargs='*', help='Make target in the makefile.', default=['all'])
 
     args = parser.parse_args()
+
+    if args.D:
+        try:
+            for define in args.D:
+                ds = define.split('=')
+                config['defines'][ds[0]] = ds[1]
+        except:
+            print('Error in -D arguments.')
+            exit(1)
 
     # Does the makefile exist?
     if not os.path.isfile(args.f):

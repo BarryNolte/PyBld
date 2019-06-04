@@ -6,16 +6,7 @@ config = {
     'debug': False,
     'PreMakeFunction': None,
     'PostMakeFunction': None,
-    'cflags': [],
-    'lflags': [],
-
-    'includepaths': [],
-    'libpaths': [],
-    'libs': [],
-
-    'bindir': 'bin',
-    'objdir': 'obj',
-    'srcdir': 'src'
+    'defines': {},
 }
 
 

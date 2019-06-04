@@ -1,4 +1,5 @@
-import sarge
+import subprocess
+import shlex
 
 
 def Shell(cmd, show_cmd=False, show_output=False):
@@ -12,18 +13,17 @@ def Shell(cmd, show_cmd=False, show_output=False):
     if show_cmd:
         print(cmd)
 
-    P = sarge.run(cmd,
-                  shell=True,
-                  stdout=sarge.Capture(),
-                  stderr=sarge.Capture(),
-                  async_=False)
+    args = shlex.split(cmd)
+    P = subprocess.Popen(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    P.wait()
+    out, err = P.communicate()
 
-    print(P.stderr.text)
+    print(err)
 
     if show_output:
-        print(P.stdout.text)
+        print(out)
 
-    return P.returncode == 0, P.returncode, P.stdout.text
+    return P.returncode == 0, P.returncode, out
 
 
 def ShellAsync(cmds, show_cmd=False):
@@ -33,18 +33,24 @@ def ShellAsync(cmds, show_cmd=False):
 
     procs = []
     for cmd in cmds:
-        P = sarge.run(cmd, shell=True, stdout=sarge.Capture(), stderr=sarge.Capture(), async_=True)
+        # args = shlex.split(cmd)
+        P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         procs.append(P)
 
     return procs
 
 
 def WaitOnProcesses(Procs, show_output=False):
-    for p in Procs:
-        p.wait()
-        print(p.stderr.text)
-        if show_output:
-            print(p.stdout.text)
+    while len(Procs) > 0:
+        for p in Procs:
+            ret = p.poll()
+            if ret is not None:
+                Procs.remove(p)
+                out, err = p.communicate()
+                if err:
+                    print('Error: ' + err, end='')
+                if show_output and out:
+                    print(out, end='')
 
 
 def KillProcesses(Procs):
@@ -62,7 +68,7 @@ if __name__ == '__main__':
          'sleep 2 && echo 2',
          'sleep 1 && echo 1',
          'sleep 10 && echo 10',
-         'sleep 7 && echo 7',
+         'sleep 7 && echo 7 >&2',
          'sleep 3 && echo 3',
          'sleep 9 && echo 9',
          'sleep 12 && echo 12'], show_cmd=True)
