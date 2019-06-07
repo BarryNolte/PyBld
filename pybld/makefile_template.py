@@ -1,4 +1,4 @@
-"""Template text for PyMake"""
+"""Template text for PyMake."""
 
 gccTemplate = """
 

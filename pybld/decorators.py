@@ -1,9 +1,13 @@
+"""Decorators for makefiles's."""
 from time import perf_counter
 
 
-def target(func):
-    """
-    This is a decorator function
+def buildTarget(func):
+    """Build a Target.
+
+    Function decorator to signify that the function
+    is a build target.
+
     :param func: (function)
     :return:
     """
@@ -18,7 +22,7 @@ def target(func):
 
         if returnValue is None or returnValue is False:
             return False, run_time
-        else:
-            return True, run_time
+
+        return True, run_time
 
     return decorator_func

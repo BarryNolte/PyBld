@@ -3,13 +3,13 @@ import shlex
 
 
 def Shell(cmd, show_cmd=False, show_output=False):
-    '''
-    Run cmd in the shell returning the output
+    """Run cmd in the shell returning the output.
+    
     :param cmd: (str) command to run in the available shell
     :param show_cmd: (bool) print command to console
     :param show_output: (bool) print command stdout to console
     :return: (bool, int, str) returns pass/fail, return code and the generated text from the shell command
-    '''
+    """
     if show_cmd:
         print(cmd)
 
@@ -32,8 +32,8 @@ class ProcessControl:
         self.Cmds = []
         self.Jobs = jobs
 
-    def _InsertMoreProcs(self):
-        while len(self.Procs) < self.Jobs and len(self.Cmds) > 0:
+    def InsertMoreProcs(self):
+        while len(self.Procs) < self.Jobs and self.Cmds:
             cmd = self.Cmds.pop()
             P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.Procs.insert(0, P)
@@ -44,10 +44,10 @@ class ProcessControl:
             for cmd in cmds:
                 print(cmd)
 
-        self._InsertMoreProcs()
+        self.InsertMoreProcs()
 
     def WaitOnProcesses(self, show_output=False):
-        while len(self.Procs) > 0 or len(self.Cmds) > 0:
+        while self.Procs or self.Cmds:
             procsToScan = self.Procs
             for p in procsToScan:
                 ret = p.poll()
@@ -59,13 +59,13 @@ class ProcessControl:
                         print(out, end='')
                     self.Procs.remove(p)
                     break
-            self._InsertMoreProcs()
+            self.InsertMoreProcs()
 
     def KillProcesses(self):
         for p in self.Procs:
             try:
                 p.kill()
-            except:
+            except(BaseException):
                 pass
 
 

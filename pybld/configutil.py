@@ -8,6 +8,7 @@ config = {
     'PostMakeFunction': None,
     'defines': {},
     'defaultTargets': ['all'],
+    'jobs': 4,
 }
 
 
@@ -44,5 +45,4 @@ checkBox = u'✅  '
 crossMark = u'❌  '
 
 if __name__ == '__main__':
-    '''Test Functions'''
     print("")

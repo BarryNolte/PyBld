@@ -10,8 +10,9 @@ class TargetStatus(Enum):
     RUNFAIL = 3
 
 
-class TargetObject(object):
-    '''Defines a target, and what it depends on '''
+class TargetObject():
+    """Defines a target, and what it depends on."""
+
     def __init__(self, func, args, MakefileObj):
         self.Name = func
         self.func = getattr(MakefileObj, func)
@@ -33,21 +34,21 @@ class TargetObject(object):
         PrintColor(f'{idstr} Dependency checking of Target "{self.Name}"', theme['info'].Foreground(), theme['info'].Background())
 
         # leaf node, this has no dependencies
-        if len(self.Dependencies) == 0:
+        if not self.Dependencies:
             return True
 
-        for i, item in enumerate(self.Dependencies):
-            if type(item) is list:
+        for _, item in enumerate(self.Dependencies):
+            if isinstance(item, list):
                 # assumed to be list of file names (paths)
                 for subitem in item:
                     if not os.path.isfile(subitem):
                         PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{subitem}" does not exsist!', theme['error'].Foreground(), theme['error'].Background())
                         return False
-            elif type(item) is str:
+            elif isinstance(item, str):
                 if not os.path.isfile(item):
                     PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{item}" does not exsist!', theme['error'].Foreground(), theme['error'].Background())
                     return False
-            elif type(item) is TargetObject:  # another target
+            elif isinstance(item, TargetObject):  # another target
                 if not item.run():
                     PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": Target "{item.Name}" failed', theme['error'].Foreground(), theme['error'].Background())
                     return False
@@ -71,7 +72,7 @@ class TargetObject(object):
                     PrintColor(f'{checkBox}Target "{self.Name}" succeded! ({time:.4f} sec)', theme['success'].Foreground(), theme['success'].Background())
 
                 return retV
-            except:
+            except(BaseException):
                 PrintColor(f'Internal error in the target function "{self.Name}"', theme['error'].Foreground(), theme['error'].Background())
                 raise
 

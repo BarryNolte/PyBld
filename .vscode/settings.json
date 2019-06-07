@@ -1,13 +1,23 @@
 {
     "python.pythonPath": "/usr/local/opt/python/bin/python3.7",
     "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
     "editor.tabSize": 4,
     "python.linting.flake8Args": [
         "--ignore=E722,E501",
         "--exclude=__init__.py"
     ],
+    "python.linting.pylamaArgs": [
+        "--ignote=E722,#501",
+        "--linters pydocstyle,pycodestyle,pyflakes,pylint"
+    ],
     "graphvizPreview.engine": "dot",
-    "graphvizPreview.dotPath": "/usr/local/bin/dot"
+    "graphvizPreview.dotPath": "/usr/local/bin/dot",
+    "python.linting.pylamaEnabled": false,
+    "python.linting.pydocstyleEnabled": true,
+    "python.linting.prospectorEnabled": false,
+    "python.linting.pep8Enabled": false,
+    "python.linting.mypyEnabled": false,
+    "python.linting.banditEnabled": false
 }

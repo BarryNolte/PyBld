@@ -1,4 +1,4 @@
-'''Utility functions for PyBld '''
+"""Utility functions for PyBld."""
 from colorama import Fore, Back, Style
 from traceback import print_exc
 
@@ -8,24 +8,27 @@ def PrintException():
     print_exc()
 
 
-def PrintColor(txt, fg='', bg='', bold=False):
+def PrintColor(txt, fg='', bg=''):
     print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}")
 
 
 def Highlight_Custom(txt, pattern, color):
-    # type:(str, pattern, tuple[str]) -> str
-    # if type(txt) is unicode:
-    #    txt = txt.encode('UTF-8')
+    """Highlight a string.
+
+    type:(str, pattern, tuple[str]) -> str
+     if type(txt) is unicode:
+        txt = txt.encode('UTF-8')
+    """
     from re import Pattern
     retV = txt
-    if type(pattern) is Pattern:
+    if isinstance(pattern, Pattern):
         founds = pattern.findall(txt)
         newtxt = txt
         for s in founds:
             colored_s = f'{color[0]}{color[1]}{s}{Style.RESET_ALL}'
             newtxt = newtxt.replace(s, colored_s)
         retV = newtxt
-    elif type(pattern) is str:
+    elif isinstance(pattern, str):
         s = pattern
         colored_s = f'{color[0]}{color[1]}{s}{Style.RESET_ALL}'
         retV = txt.replace(s, colored_s)
@@ -46,5 +49,4 @@ class Indenter():
 
 
 if __name__ == '__main__':
-    '''Test Functions'''
     print(Highlight_Custom('foo bar baz', 'bar', [Fore.GREEN, Back.YELLOW]))

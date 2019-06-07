@@ -7,18 +7,21 @@ from pybld.utility import PrintColor, Fore
 from pybld.jobs import Shell
 
 from pybld.makefile_template import gccTemplate
-from pybld.config import defaultMakefile
-from pybld.config import theme, config
+from pybld.configutil import defaultMakefile
+from pybld.configutil import theme, config
 
 from pybld.targetobj import TargetObject, TargetStatus
 from tabulate import tabulate
 
+# TODO: Need to 'classify' these to hide functions
+
 
 def ParseMakefile(makefile_path, makefileObj):
-    '''Parse the makefile to find the targets'''
+    """Parse the makefile to find the targets."""
+    """
     def ParseTargetArgs(args):
-        '''Parse out the arguments to the target if there are any'''
-        arglist = l.replace('@target', '').replace('(', '') \
+        #'#''Parse out the arguments to the target if there are any'#'#'
+        arglist = l.replace('@buildTarget', '').replace('(', '') \
             .replace(')', '').replace(',', ';').replace('; ', ';') \
             .replace("'", '').replace('"', '')
 
@@ -31,7 +34,7 @@ def ParseMakefile(makefile_path, makefileObj):
         post = argdict.get('postFunc', None)
 
         return desc, pre, post
-
+    """
     Targets = {}  # type: dict[str, TargetObject]
     if os.path.isfile(makefile_path):
         with open(makefile_path, 'r') as f:
@@ -39,7 +42,7 @@ def ParseMakefile(makefile_path, makefileObj):
 
         makefile_lines = makefile_str.splitlines()
         for i, l in enumerate(makefile_lines):
-            if l.startswith('@target'):
+            if l.startswith('@buildTarget'):
                 target_func = re.findall(r'def\s+(\w+)\s*\(', makefile_lines[i + 1])
                 target_func = target_func[0]
                 target_args = re.findall(r'def\s+\w+\s*\((.*)\)', makefile_lines[i + 1])
@@ -50,13 +53,12 @@ def ParseMakefile(makefile_path, makefileObj):
                 Targets[target_func] = TargetObject(target_func, target_args, makefileObj)
 
         # Detect Dependencies
-        for key in Targets.keys():
-            tarItem = Targets[key]
-            for i, item in enumerate(tarItem.Dependencies):
+        for _, value in Targets:
+            for i, item in enumerate(value.Dependencies):
                 if callable(item):
-                    depTarget_str = tarItem.args_str[i]
+                    depTarget_str = value.args_str[i]
                     depTarget = Targets[depTarget_str]
-                    tarItem.Dependencies[i] = depTarget
+                    value.Dependencies[i] = depTarget
 
     return Targets
 
@@ -76,9 +78,9 @@ def PrintTargets(targets):
         row = []
         dep = ''
         for depTarget in targets[target].Dependencies:
-            if type(depTarget) is TargetObject:
+            if isinstance(depTarget, TargetObject):
                 dep += ' -> ' + depTarget.Name
-            elif type(depTarget) is list:
+            elif isinstance(depTarget, list):
                 for fn in depTarget:
                     dep += fn + ' '
         row.append(target)
@@ -106,7 +108,7 @@ def DoMain():
     parser._optionals.title = f'{Fore.YELLOW}optional arguments{Fore.RESET}'
     parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
-    # parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
+    parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.', default=4)
     parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
     parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.')
     parser.epilog = '\nUSAGE EXAMPLES GO HERE\n'
@@ -118,9 +120,11 @@ def DoMain():
             for define in args.D:
                 ds = define.split('=')
                 config['defines'][ds[0]] = ds[1]
-        except:
+        except(BaseException):
             print('Error in -D arguments.')
             exit(1)
+
+    config['jobs'] = args.j
 
     # Does the makefile exist?
     if not os.path.isfile(args.f):

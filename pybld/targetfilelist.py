@@ -5,16 +5,17 @@ import time
 from tabulate import tabulate
 from enum import Enum
 from pybld.fileops import CurrentWorkingDirectory, MakeDirectory, GetModifyTime
-from config import Fore
+from colorama import Fore
+from configutil import config
 
 
 class MakeStatus(Enum):
-    UNKNOWN = 1,
-    NEEDTOBUILD = 2,
+    UNKNOWN = 1
+    NEEDTOBUILD = 2
     NONEEDTOBUILD = 3
 
 
-class TargetFile(object):
+class TargetFile():
     def __init__(self, sourceFile):
         self.Source = sourceFile
         self.SourceTime = None
@@ -23,12 +24,16 @@ class TargetFile(object):
         self.MakeStatus = MakeStatus.UNKNOWN
 
 
-class TargetFileList(object):
+class TargetFileList():
     def __init__(self):
         self.FileList = []
 
-    def FindSourceFiles(self, root=CurrentWorkingDirectory(), filters=['*'], recurse=False):
+    def FindSourceFiles(self, root=CurrentWorkingDirectory(), filters=None, recurse=False):
+        if filters is None:
+            filters = ['*']
+
         files = glob.glob(os.path.join(root, '**'), recursive=recurse)
+
         for pattern in filters:
             for filename in fnmatch.filter(files, pattern):
                 filePath = os.path.join(root, filename)
@@ -43,8 +48,7 @@ class TargetFileList(object):
         bldDir = os.path.join(cwd, builddir)
         MakeDirectory(bldDir)
         for tf in self.FileList:
-            basePath, file = os.path.split(tf.Source)
-            file, exten = os.path.splitext(file)
+            file, _ = os.path.splitext(tf.Source)
             tf.Target = os.path.join(bldDir, file + ext)
             tf.Target = os.path.relpath(tf.Target)
 
@@ -55,7 +59,10 @@ class TargetFileList(object):
                 if tf.TargetTime > tf.SourceTime:
                     tf.MakeStatus = MakeStatus.NONEEDTOBUILD
 
-    def PrintTargets(self):
+        if config['debug'] is True:
+            self.PrintTargetFiles()
+
+    def PrintTargetFiles(self):
         table = []
         for tf in self.FileList:
             src = ''
@@ -81,10 +88,8 @@ class TargetFileList(object):
 
 
 if __name__ == '__main__':
-    '''Test Functions'''
     x = TargetFileList()
     x.FindSourceFiles(filters=['*.cpp', '*.s'], recurse=True)
     x.SetTargets('.o', 'build')
 
-    x.PrintTargets()
-    pass
+    x.PrintTargetFiles()
