@@ -7,6 +7,7 @@ config = {
     'PreMakeFunction': None,
     'PostMakeFunction': None,
     'defines': {},
+    'defaultTargets': ['all'],
 }
 
 

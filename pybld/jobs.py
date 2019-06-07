@@ -26,44 +26,53 @@ def Shell(cmd, show_cmd=False, show_output=False):
     return P.returncode == 0, P.returncode, out
 
 
-def ShellAsync(cmds, show_cmd=False):
-    if show_cmd:
-        for cmd in cmds:
-            print(cmd)
+class ProcessControl:
+    def __init__(self, jobs=4):
+        self.Procs = []
+        self.Cmds = []
+        self.Jobs = jobs
 
-    procs = []
-    for cmd in cmds:
-        # args = shlex.split(cmd)
-        P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        procs.append(P)
+    def _InsertMoreProcs(self):
+        while len(self.Procs) < self.Jobs and len(self.Cmds) > 0:
+            cmd = self.Cmds.pop()
+            P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.Procs.insert(0, P)
 
-    return procs
+    def ShellAsync(self, cmds, show_cmd=False):
+        self.Cmds = cmds
+        if show_cmd:
+            for cmd in cmds:
+                print(cmd)
 
+        self._InsertMoreProcs()
 
-def WaitOnProcesses(Procs, show_output=False):
-    while len(Procs) > 0:
-        for p in Procs:
-            ret = p.poll()
-            if ret is not None:
-                Procs.remove(p)
-                out, err = p.communicate()
-                if err:
-                    print('Error: ' + err, end='')
-                if show_output and out:
-                    print(out, end='')
+    def WaitOnProcesses(self, show_output=False):
+        while len(self.Procs) > 0 or len(self.Cmds) > 0:
+            procsToScan = self.Procs
+            for p in procsToScan:
+                ret = p.poll()
+                if ret is not None:
+                    out, err = p.communicate()
+                    if err:
+                        print('Error: ' + err, end='')
+                    if show_output and out:
+                        print(out, end='')
+                    self.Procs.remove(p)
+                    break
+            self._InsertMoreProcs()
 
-
-def KillProcesses(Procs):
-    for p in Procs:
-        try:
-            p.kill()
-        except:
-            pass
+    def KillProcesses(self):
+        for p in self.Procs:
+            try:
+                p.kill()
+            except:
+                pass
 
 
 if __name__ == '__main__':
     # Tests
-    procs = ShellAsync(
+    po = ProcessControl()
+    po.ShellAsync(
         ['sleep 5 && echo 5',
          'sleep 2 && echo 2',
          'sleep 1 && echo 1',
@@ -73,4 +82,4 @@ if __name__ == '__main__':
          'sleep 9 && echo 9',
          'sleep 12 && echo 12'], show_cmd=True)
 
-    WaitOnProcesses(procs, show_output=True)
+    po.WaitOnProcesses(show_output=True)

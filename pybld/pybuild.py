@@ -102,13 +102,14 @@ def DoMain():
 
     # Parse Command Line
     parser = argparse.ArgumentParser(description=f'{Fore.CYAN}PyBld is a simple make system implemented in python.{Fore.RESET}', formatter_class=CapitalisedHelpFormatter)
-    parser._positionals.title = f'{Fore.YELLOW}positional arguments:{Fore.RESET}'
-    parser._optionals.title = f'{Fore.YELLOW}optional arguments:{Fore.RESET}'
+    parser._positionals.title = f'{Fore.YELLOW}positional arguments{Fore.RESET}'
+    parser._optionals.title = f'{Fore.YELLOW}optional arguments{Fore.RESET}'
     parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     # parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.')
     parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
-    parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.', default=['all'])
+    parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.')
+    parser.epilog = '\nUSAGE EXAMPLES GO HERE\n'
 
     args = parser.parse_args()
 
@@ -144,8 +145,13 @@ def DoMain():
 
     # =======================================================================
     # If we have targets, execute them
+    toRunTargets = None
+    if not args.target:
+        toRunTargets = config['defaultTargets']
+    else:
+        toRunTargets = args.target
 
-    for targ in args.target:
+    for targ in toRunTargets:
         selected_Target = Targets.get(targ)  # type: TargetObject
 
         if selected_Target and selected_Target.Status == TargetStatus.NOTRUN:
