@@ -1,20 +1,27 @@
 """Public facing interfaces for PyBld."""
-import sys
+from sys import exit
 
 # TODO - Clean up imports so the right things are exported :)
 from .decorators import buildTarget
-from .utility import Fore, Back, PrintColor
+from .utility import Fore, Back
 from .configutil import crossMark, checkBox, config, theme
 from .pybuild import *
 from .jobs import Shell, ProcessControl
-from .fileops import *
+from .fileops import RemoveDirectory,
+                     CreateMakefile,
+                     RenameFile, 
+                     CurrentWorkingDirectory, 
+                     ChangeDirectory, 
+                     Touch, 
+                     GetDirectoryFiles, 
+                     GetModifyTime
 from .environment import GetEnvVariable, SetEnvVariable
 from .targetobj import TargetObject, TargetStatus
 from .targetfilelist import TargetFileList, TargetFile, MakeStatus
 
 
-# Get better exception information
 def global_exception_hook(extype, exvalue, tb):
+    """Get better exception information."""
     R = Fore.RED
     Y = Fore.YELLOW
     C = Fore.CYAN

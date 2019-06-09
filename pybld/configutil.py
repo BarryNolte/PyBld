@@ -1,3 +1,4 @@
+"""Keeper of the makefile configuration."""
 from colorama import Fore, Back, Style
 
 defaultMakefile = './makefile.py'
@@ -43,6 +44,17 @@ theme = {
 # Fun Emoji's for error reporting
 checkBox = u'✅  '
 crossMark = u'❌  '
+openCircle = u'⭕  '
+exclamationMark = u'❗  '
+questionMark = u'❓  '
+okBox = u'🆗  '
+newBox = u'🆕  '
+freeBox = u'🆓  '
+prohibitedMark = u'🚫  '
+warningTriangle = u'⚠  '
+bellMark = u'🔔'
+fireMark = u'🔥'
+
 
 if __name__ == '__main__':
     print("")

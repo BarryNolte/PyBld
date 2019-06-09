@@ -1,8 +1,4 @@
-#################################################
-#
-# PyBld - setup for PyBld Tool
-#
-#################################################
+"""PyBld - setup for PyBld Tool."""
 from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
@@ -18,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/pybld",
     install_requires=["colorama", "tabulate"],
-    packages=find_packages(exclude=['tests.py']),
+    packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",

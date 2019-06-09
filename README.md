@@ -12,7 +12,7 @@
 * 
 
 ### *FEATURES*
-* GraphViz dot graph output (see graph.dot)
+* 
 * 
   
 ### *TESTS*

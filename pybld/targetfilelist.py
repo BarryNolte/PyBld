@@ -1,34 +1,54 @@
+"""TargetFileList - Keep track of files with depdencies."""
 import os
 import fnmatch
 import glob
 import time
 from tabulate import tabulate
 from enum import Enum
-from pybld.fileops import CurrentWorkingDirectory, MakeDirectory, GetModifyTime
+from pybld.fileops import CurrentWorkingDirectory, CreateDirectory, GetModifyTime
 from colorama import Fore
-from configutil import config
+from pybld.configutil import config
 
 
 class MakeStatus(Enum):
+    """Status of the Target."""
+
     UNKNOWN = 1
     NEEDTOBUILD = 2
     NONEEDTOBUILD = 3
 
 
 class TargetFile():
+    """Represents a source and it's target, along with the staus of the target."""
+    
     def __init__(self, sourceFile):
+        """Set data to defaults."""
         self.Source = sourceFile
         self.SourceTime = None
         self.Target = None
         self.TargetTime = None
         self.MakeStatus = MakeStatus.UNKNOWN
 
+    def UpdateTarget(self):
+        """Update the target modified time and the need to build."""
+        if os.path.exists(self.Target):
+            self.TargetTime = GetModifyTime(self.Target)
+        self.MakeStatus = MakeStatus.NEEDTOBUILD
+        if self.TargetTime is not None:
+            if self.TargetTime > self.SourceTime:
+                self.MakeStatus = MakeStatus.NONEEDTOBUILD
+
+
 
 class TargetFileList():
+    """List of Source/Target pairs."""
+
     def __init__(self):
+        """Empty the list of Source/Target pairs."""
         self.FileList = []
 
     def FindSourceFiles(self, root=CurrentWorkingDirectory(), filters=None, recurse=False):
+        """Glob for files given the root directory and filter pattern."""
         if filters is None:
             filters = ['*']
 
@@ -44,26 +64,23 @@ class TargetFileList():
                 self.FileList.append(tfo)
 
     def SetTargets(self, ext='', builddir=''):
+        """Given Source files, generate Target files."""
         cwd = CurrentWorkingDirectory()
         bldDir = os.path.join(cwd, builddir)
-        MakeDirectory(bldDir)
+        CreateDirectory(bldDir)
         for tf in self.FileList:
             file, _ = os.path.splitext(tf.Source)
             tf.Target = os.path.join(bldDir, file + ext)
             tf.Target = os.path.relpath(tf.Target)
 
-            if os.path.exists(tf.Target):
-                tf.TargetTime = GetModifyTime(tf.Target)
-            tf.MakeStatus = MakeStatus.NEEDTOBUILD
-            if tf.TargetTime is not None:
-                if tf.TargetTime > tf.SourceTime:
-                    tf.MakeStatus = MakeStatus.NONEEDTOBUILD
-
+            tf.UpdateTarget()
+            
         if config['debug'] is True:
             self.PrintTargetFiles()
 
     def PrintTargetFiles(self):
-        table = []
+        """Print list of Source/Target/Status."""
+        table = [] # this will be a table of tables
         for tf in self.FileList:
             src = ''
             if len(tf.Source) > 32:
@@ -80,6 +97,7 @@ class TargetFileList():
             dtTar = 'None'
             if tf.TargetTime is not None:
                 dtTar = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tf.TargetTime))
+            # add a table to the table of tables
             table.append([src, dtSrc, tar, dtTar, tf.MakeStatus])
 
         Y = Fore.YELLOW

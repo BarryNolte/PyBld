@@ -2,7 +2,7 @@ import subprocess
 import shlex
 
 
-def Shell(cmd, show_cmd=False, show_output=False):
+def Shell(cmd, show_cmd=False, show_output=True):
     """Run cmd in the shell returning the output.
     
     :param cmd: (str) command to run in the available shell
@@ -13,8 +13,7 @@ def Shell(cmd, show_cmd=False, show_output=False):
     if show_cmd:
         print(cmd)
 
-    args = shlex.split(cmd)
-    P = subprocess.Popen(args, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     P.wait()
     out, err = P.communicate()
 
@@ -46,7 +45,7 @@ class ProcessControl:
 
         self.InsertMoreProcs()
 
-    def WaitOnProcesses(self, show_output=False):
+    def WaitOnProcesses(self, show_output=True):
         while self.Procs or self.Cmds:
             procsToScan = self.Procs
             for p in procsToScan:

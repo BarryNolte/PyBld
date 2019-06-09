@@ -1,7 +1,7 @@
 import os
 from enum import Enum
 from pybld.utility import Indenter, PrintColor
-from pybld.config import theme, crossMark, checkBox
+from pybld.configutil import theme, crossMark, checkBox, config
 
 
 class TargetStatus(Enum):

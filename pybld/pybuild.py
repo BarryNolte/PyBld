@@ -53,7 +53,7 @@ def ParseMakefile(makefile_path, makefileObj):
                 Targets[target_func] = TargetObject(target_func, target_args, makefileObj)
 
         # Detect Dependencies
-        for _, value in Targets:
+        for _unused, value in Targets.items():
             for i, item in enumerate(value.Dependencies):
                 if callable(item):
                     depTarget_str = value.args_str[i]

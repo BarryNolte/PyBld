@@ -3,11 +3,6 @@ from colorama import Fore, Back, Style
 from traceback import print_exc
 
 
-def PrintException():
-    PrintColor('Crash: (Program Exception)', Fore.BLACK, Back.LIGHTGREEN_EX)
-    print_exc()
-
-
 def PrintColor(txt, fg='', bg=''):
     print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}")
 
@@ -37,14 +32,23 @@ def Highlight_Custom(txt, pattern, color):
 
 
 class Indenter():
+    """Used for indenting text for output.
+    
+    Each time this class is constructed, the indent increases
+    by one, and each time it goes out of scope, the indent
+    decreases by one.
+    """
 
     def __init__(self):
+        """Construct."""
         self.indent = 1
 
     def __del__(self):
+        """Delete."""
         self.indent -= 1
 
     def GetIndent(self):
+        """Return our current indent value."""
         return self.indent
 
 
