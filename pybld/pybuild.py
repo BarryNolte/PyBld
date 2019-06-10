@@ -1,15 +1,13 @@
-import sys
+"""Mail PyBld code file."""
+import argparse
 import os
 import re
-import argparse
+import sys
+from textwrap import fill, wrap
 
-from pybld.utility import PrintColor, Fore
+from pybld.configutil import A, F, config, crossMark, defaultMakefile
 from pybld.jobs import Shell
-
 from pybld.makefile_template import gccTemplate
-from pybld.configutil import defaultMakefile
-from pybld.configutil import theme, config
-
 from pybld.targetobj import TargetObject, TargetStatus
 from tabulate import tabulate
 
@@ -64,6 +62,7 @@ def ParseMakefile(makefile_path, makefileObj):
 
 
 def CreateMakefile(filename):
+    """Create a makefile from a template."""
     retV = input(f'Makefile does not exist, do you want to create "{filename}"? (y/n): ')
     if retV.lower() == 'y':
         tempText = str(gccTemplate)
@@ -73,6 +72,7 @@ def CreateMakefile(filename):
 
 
 def PrintTargets(targets):
+    """Print out all targets and their dependencies."""
     table = []
     for target in targets:
         row = []
@@ -82,30 +82,33 @@ def PrintTargets(targets):
                 dep += ' -> ' + depTarget.Name
             elif isinstance(depTarget, list):
                 for fn in depTarget:
-                    dep += fn + ' '
+                    dep += fn.Source + ' '
         row.append(target)
-        row.append(dep)
+        row.append(fill(dep, 42))
         table.append(row)
 
-    Y = Fore.YELLOW
-    N = Fore.RESET
+    Y = F.Yellow
+    N = A.Reset
     print(tabulate(table, headers=[f'{Y}Avalible Targets{N}', f'{Y}Depends On{N}'], tablefmt="psql"))
     sys.exit()
 
 
 class CapitalisedHelpFormatter(argparse.HelpFormatter):
+    """Help formatter class."""
+
     def add_usage(self, usage, actions, groups, prefix=None):
+        """Is called when help needs to print usage."""
         if prefix is None:
-            prefix = f'{Fore.YELLOW}usage: {Fore.RESET}'
+            prefix = f'{F.Yellow}usage: {A.Reset}'
         return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
 
 
 def DoMain():
-
+    """Program Entry, this is where it all starts."""
     # Parse Command Line
-    parser = argparse.ArgumentParser(description=f'{Fore.CYAN}PyBld is a simple make system implemented in python.{Fore.RESET}', formatter_class=CapitalisedHelpFormatter)
-    parser._positionals.title = f'{Fore.YELLOW}positional arguments{Fore.RESET}'
-    parser._optionals.title = f'{Fore.YELLOW}optional arguments{Fore.RESET}'
+    parser = argparse.ArgumentParser(description=f'{F.Cyan}PyBld is a simple make system implemented in python.{A.Reset}', formatter_class=CapitalisedHelpFormatter)
+    parser._positionals.title = f'{F.Yellow}positional arguments{A.Reset}'
+    parser._optionals.title = f'{F.Yellow}optional arguments{A.Reset}'
     parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.', default=4)
@@ -115,6 +118,7 @@ def DoMain():
 
     args = parser.parse_args()
 
+    # Parse out any defined 'defines'
     if args.D:
         try:
             for define in args.D:
@@ -124,6 +128,7 @@ def DoMain():
             print('Error in -D arguments.')
             exit(1)
 
+    # How many concurrent jobs should we run
     config['jobs'] = args.j
 
     # Does the makefile exist?
@@ -161,7 +166,7 @@ def DoMain():
         if selected_Target and selected_Target.Status == TargetStatus.NOTRUN:
             selected_Target.run()
         else:
-            PrintColor(f'Error: target function "{selected_Target.Name}" does not exist!', theme['error'].Foreground(), theme['error'].Background())
+            print(f'{crossMark}Error: target function "{selected_Target.Name}" does not exist!')
             sys.exit(1)
 
     # =======================================================================

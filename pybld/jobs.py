@@ -1,5 +1,6 @@
-import subprocess
+"""Shell Functions for synchronous or asynchronous running of commands."""
 import shlex
+import subprocess
 
 
 def Shell(cmd, show_cmd=False, show_output=True):
@@ -17,10 +18,12 @@ def Shell(cmd, show_cmd=False, show_output=True):
     P.wait()
     out, err = P.communicate()
 
-    print(err)
+    if err:
+        print(err)
 
     if show_output:
-        print(out)
+        if out:
+            print(out)
 
     return P.returncode == 0, P.returncode, out
 

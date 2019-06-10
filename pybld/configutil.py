@@ -1,5 +1,4 @@
 """Keeper of the makefile configuration."""
-from colorama import Fore, Back, Style
 
 defaultMakefile = './makefile.py'
 
@@ -12,34 +11,47 @@ config = {
     'jobs': 4,
 }
 
-
-class ColorPair:
-    def __init__(self, fg, bg=''):
-        self.fg = fg
-        self.bg = bg
-
-    def Background(self):
-        return self.bg
-
-    def Foreground(self):
-        return self.fg
-
 ####
 # For later use, termcolor package or terminal-palette
 # print_red_on_cyan = lambda x: cprint(x, 'red', 'on_cyan')
 # print_red_on_cyan('Hello, World!')
 # print_red_on_cyan('Hello, Universe!')
+class A():
+    """Attribute Codes."""
+    
+    Reset = '\033[0m'
+    Bright  = '\033[1m'
+    Dim = '\033[2m'
+    Underscore = '\033[4m'
+    Blink = '\033[5m'
+    Reverse = '\033[7m'
+    Hidden = '\033[8m'
+
+class F():
+    """Forground Color Codes."""
+
+    Black = '\033[30m'
+    Red = '\033[31m'
+    Green = '\033[32m'
+    Yellow = '\033[33m'
+    Blue = '\033[34m'
+    Magenta = '\033[35m'
+    Cyan = '\033[36m'
+    White = '\033[37m'
+
+class B():
+    """Background Color Codes."""
+    
+    Black = '\033[40m'
+    Red = '\033[41m'
+    Green = '\033[42m'
+    Yellow = '\033[43m'
+    Blue = '\033[44m'
+    Magenta = '\033[45m'
+    Cyan = '\033[46m'
+    White = '\033[47m'
 
 
-theme = {
-    'error': ColorPair(Fore.RED, Back.BLACK),
-    'warning': ColorPair(Fore.YELLOW),
-    'info': ColorPair(Fore.LIGHTGREEN_EX, Back.BLUE),
-    'plain': ColorPair(Fore.LIGHTWHITE_EX),
-    'verbose': ColorPair(Fore.WHITE),
-    'target': ColorPair(Style.UNDERLINE + Fore.LIGHTGREEN_EX),
-    'success': ColorPair(Fore.GREEN),
-}
 
 # Fun Emoji's for error reporting
 checkBox = u'✅  '

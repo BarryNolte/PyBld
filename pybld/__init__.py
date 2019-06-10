@@ -2,33 +2,27 @@
 from sys import exit
 
 # TODO - Clean up imports so the right things are exported :)
+from .configutil import checkBox, config, crossMark, F, A
 from .decorators import buildTarget
-from .utility import Fore, Back
-from .configutil import crossMark, checkBox, config, theme
-from .pybuild import *
-from .jobs import Shell, ProcessControl
-from .fileops import RemoveDirectory,
-                     CreateMakefile,
-                     RenameFile, 
-                     CurrentWorkingDirectory, 
-                     ChangeDirectory, 
-                     Touch, 
-                     GetDirectoryFiles, 
-                     GetModifyTime
 from .environment import GetEnvVariable, SetEnvVariable
+from .fileops import (ChangeDirectory, CurrentWorkingDirectory,
+                      GetDirectoryFiles, GetModifyTime, RemoveDirectory,
+                      RenameFile, Touch)
+from .jobs import ProcessControl, Shell
+from .pybuild import *
+from .targetfilelist import MakeStatus, TargetFile, TargetFileList
 from .targetobj import TargetObject, TargetStatus
-from .targetfilelist import TargetFileList, TargetFile, MakeStatus
 
 
 def global_exception_hook(extype, exvalue, tb):
     """Get better exception information."""
-    R = Fore.RED
-    Y = Fore.YELLOW
-    C = Fore.CYAN
-    N = Fore.RESET
+    R = F.Red
+    Y = F.Yellow
+    C = F.Cyan
+    N = A.Reset
 
     print(f'==========================================')
-    print(f'=       {R}PyBld E x c e p t i o n{N}          =')
+    print(f'=  {R}PyBld E x c e p t i o n{N}=')
     print(f'==========================================')
     print('')
     print(f' Type  : {Y}{extype}{N}')
@@ -38,7 +32,7 @@ def global_exception_hook(extype, exvalue, tb):
     tbList = traceback.extract_tb(tb)
 
     print(f'{C}')
-    print(f'    Function Name    Line   Code                       File Name')
+    print(f'    Function Name    Line   Code   File Name')
     print(f'  -----------------|------|--------------------------|----------------------------')
     print(f'{N}')
 

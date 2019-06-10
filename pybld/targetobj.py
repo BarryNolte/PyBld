@@ -1,10 +1,14 @@
+"""TargetObject definition."""
 import os
 from enum import Enum
-from pybld.utility import Indenter, PrintColor
-from pybld.configutil import theme, crossMark, checkBox, config
+
+from pybld.configutil import checkBox, config, crossMark
+from pybld.utility import Indenter
 
 
 class TargetStatus(Enum):
+    """Status Values."""
+
     NOTRUN = 1
     RUNSUCCESS = 2
     RUNFAIL = 3
@@ -31,7 +35,7 @@ class TargetObject():
     def check_dependencies(self):
         indent = Indenter()
         idstr = '-' * indent.GetIndent()
-        PrintColor(f'{idstr} Dependency checking of Target "{self.Name}"', theme['info'].Foreground(), theme['info'].Background())
+        print(f'{idstr} Dependency checking of Target "{self.Name}"')
 
         # leaf node, this has no dependencies
         if not self.Dependencies:
@@ -41,16 +45,16 @@ class TargetObject():
             if isinstance(item, list):
                 # assumed to be list of file names (paths)
                 for subitem in item:
-                    if not os.path.isfile(subitem):
-                        PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{subitem}" does not exsist!', theme['error'].Foreground(), theme['error'].Background())
+                    if not os.path.isfile(subitem.Source):
+                        print(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{subitem.Source}" does not exsist!')
                         return False
             elif isinstance(item, str):
                 if not os.path.isfile(item):
-                    PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{item}" does not exsist!', theme['error'].Foreground(), theme['error'].Background())
+                    print(f'{crossMark}Dependency Error @ Target "{self.Name}": file "{item}" does not exsist!')
                     return False
             elif isinstance(item, TargetObject):  # another target
                 if not item.run():
-                    PrintColor(f'{crossMark}Dependency Error @ Target "{self.Name}": Target "{item.Name}" failed', theme['error'].Foreground(), theme['error'].Background())
+                    print(f'{crossMark}Dependency Error @ Target "{self.Name}": Target "{item.Name}" failed')
                     return False
 
         return True
@@ -58,7 +62,7 @@ class TargetObject():
     def run(self):
         if self.check_dependencies():
             print()
-            PrintColor(f'Executing Target "{self.Name}"', theme['target'].Foreground(), theme['target'].Background())
+            print(f'Executing Target "{self.Name}"')
             try:
                 self.Status = TargetStatus.RUNFAIL
 
@@ -66,14 +70,14 @@ class TargetObject():
                 self.Time = time
 
                 if not retV:
-                    PrintColor(f'{crossMark}Target "{self.Name}" failed!', theme['error'].Foreground(), theme['error'].Background())
+                    print(f'{crossMark}Target "{self.Name}" failed!')
                 else:
                     self.Status = TargetStatus.RUNSUCCESS
-                    PrintColor(f'{checkBox}Target "{self.Name}" succeded! ({time:.4f} sec)', theme['success'].Foreground(), theme['success'].Background())
+                    print(f'{checkBox}Target "{self.Name}" succeded! ({time:.4f} sec)')
 
                 return retV
             except(BaseException):
-                PrintColor(f'Internal error in the target function "{self.Name}"', theme['error'].Foreground(), theme['error'].Background())
+                print(f'Internal error in the target function "{self.Name}"')
                 raise
 
         else:

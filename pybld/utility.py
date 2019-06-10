@@ -1,10 +1,5 @@
 """Utility functions for PyBld."""
-from colorama import Fore, Back, Style
 from traceback import print_exc
-
-
-def PrintColor(txt, fg='', bg=''):
-    print(f"{fg}{bg}{txt}{Fore.RESET}{Back.RESET}{Style.RESET_ALL}")
 
 
 def Highlight_Custom(txt, pattern, color):
@@ -53,4 +48,4 @@ class Indenter():
 
 
 if __name__ == '__main__':
-    print(Highlight_Custom('foo bar baz', 'bar', [Fore.GREEN, Back.YELLOW]))
+    pass

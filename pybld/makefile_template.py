@@ -18,7 +18,7 @@ obj_files = retarget(obj_files, BUILDdir, '')
 
 @target
 def all(Tlink): # depends on Target link
-  printcolor('Build Succeeded', colors.IGreen)
+  print('Build Succeeded', colors.IGreen)
   return True
 
 @target

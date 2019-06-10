@@ -13,7 +13,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pybld",
-    install_requires=["colorama", "tabulate"],
+    install_requires=["tabulate"],
     packages=find_packages(),
     classifiers=[
         "Development Status :: 3 - Alpha",
