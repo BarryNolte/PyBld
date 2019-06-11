@@ -29,18 +29,28 @@ def Shell(cmd, show_cmd=False, show_output=True):
 
 
 class ProcessControl:
+    """Keeps track of a group of asyncronous sub-processes."""
+
     def __init__(self, jobs=4):
+        """Initialize everything we need to launch sub-processes."""
         self.Procs = []
         self.Cmds = []
         self.Jobs = jobs
 
     def InsertMoreProcs(self):
+        """Start sub-process.
+        
+        Then insert them into our list of 
+        sub-processes, but don't allow more than the number
+        defined in Jobs to run concurrently
+        """
         while len(self.Procs) < self.Jobs and self.Cmds:
             cmd = self.Cmds.pop()
             P = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.Procs.insert(0, P)
 
     def ShellAsync(self, cmds, show_cmd=False):
+        """Take a list of shell commands and begins running them."""
         self.Cmds = cmds
         if show_cmd:
             for cmd in cmds:
@@ -49,6 +59,7 @@ class ProcessControl:
         self.InsertMoreProcs()
 
     def WaitOnProcesses(self, show_output=True):
+        """Wait until all the sub-processes finish before returning."""
         while self.Procs or self.Cmds:
             procsToScan = self.Procs
             for p in procsToScan:
@@ -64,6 +75,8 @@ class ProcessControl:
             self.InsertMoreProcs()
 
     def KillProcesses(self):
+        """Kill all the active sub-proccess and prevent new ones from being created."""
+        self.Cmds = []  # Empty the list of commands
         for p in self.Procs:
             try:
                 p.kill()

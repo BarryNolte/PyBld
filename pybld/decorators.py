@@ -1,16 +1,18 @@
 """Decorators for makefiles's."""
 from time import perf_counter
 
-
+# store the target descriptions here, this is a little
+# convoluted, but it seems to work
+descriptions = {}
 def buildTarget(func):
     """Build a Target.
 
     Function decorator to signify that the function
     is a build target.
-
-    :param func: (function)
-    :return:
     """
+    # Save the descriptions, see note above
+    descriptions[func.__name__] = func.__doc__
+    
     def decorator_func(*args, **kwargs):
         start_time = perf_counter()
 

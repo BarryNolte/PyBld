@@ -38,6 +38,7 @@ class F():
     Magenta = '\033[35m'
     Cyan = '\033[36m'
     White = '\033[37m'
+    Reset = '\033[39m'
 
 class B():
     """Background Color Codes."""
@@ -50,20 +51,21 @@ class B():
     Magenta = '\033[45m'
     Cyan = '\033[46m'
     White = '\033[47m'
+    Reset = '\033[49m'
 
 
 
 # Fun Emoji's for error reporting
-checkBox = u'✅  '
-crossMark = u'❌  '
-openCircle = u'⭕  '
-exclamationMark = u'❗  '
-questionMark = u'❓  '
-okBox = u'🆗  '
-newBox = u'🆕  '
-freeBox = u'🆓  '
-prohibitedMark = u'🚫  '
-warningTriangle = u'⚠  '
+checkBox = u'✅'
+crossMark = u'❌'
+openCircle = u'⭕'
+exclamationMark = u'❗'
+questionMark = u'❓'
+okBox = u'🆗'
+newBox = u'🆕'
+freeBox = u'🆓'
+prohibitedMark = u'🚫'
+warningTriangle = u'⚠'
 bellMark = u'🔔'
 fireMark = u'🔥'
 

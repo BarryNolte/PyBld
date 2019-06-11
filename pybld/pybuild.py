@@ -5,10 +5,11 @@ import re
 import sys
 from textwrap import fill, wrap
 
-from pybld.configutil import A, F, config, crossMark, defaultMakefile
+from pybld.configutil import A, F, B, config, crossMark, defaultMakefile
 from pybld.jobs import Shell
 from pybld.makefile_template import gccTemplate
 from pybld.targetobj import TargetObject, TargetStatus
+from pybld.decorators import descriptions
 from tabulate import tabulate
 
 # TODO: Need to 'classify' these to hide functions
@@ -16,23 +17,6 @@ from tabulate import tabulate
 
 def ParseMakefile(makefile_path, makefileObj):
     """Parse the makefile to find the targets."""
-    """
-    def ParseTargetArgs(args):
-        #'#''Parse out the arguments to the target if there are any'#'#'
-        arglist = l.replace('@buildTarget', '').replace('(', '') \
-            .replace(')', '').replace(',', ';').replace('; ', ';') \
-            .replace("'", '').replace('"', '')
-
-        argdict = {}
-        if arglist:
-            argdict = dict(item.split("=") for item in arglist.split(";"))
-
-        desc = argdict.get('desc', '')
-        pre = argdict.get('preFunc', None)
-        post = argdict.get('postFunc', None)
-
-        return desc, pre, post
-    """
     Targets = {}  # type: dict[str, TargetObject]
     if os.path.isfile(makefile_path):
         with open(makefile_path, 'r') as f:
@@ -83,13 +67,17 @@ def PrintTargets(targets):
             elif isinstance(depTarget, list):
                 for fn in depTarget:
                     dep += fn.Source + ' '
+        desc = str(descriptions.get(target, ''))
+        
         row.append(target)
-        row.append(fill(dep, 42))
+        row.append(fill(dep, 36))
+        row.append(fill(desc, 36))
+        
         table.append(row)
 
     Y = F.Yellow
-    N = A.Reset
-    print(tabulate(table, headers=[f'{Y}Avalible Targets{N}', f'{Y}Depends On{N}'], tablefmt="psql"))
+    N = A.Reset + F.Reset + B.Reset
+    print(tabulate(table, headers=[f'{Y}Targets{N}', f'{Y}Depends On{N}', f'{Y}Description{N}'], tablefmt="psql"))
     sys.exit()
 
 
@@ -99,7 +87,7 @@ class CapitalisedHelpFormatter(argparse.HelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
         """Is called when help needs to print usage."""
         if prefix is None:
-            prefix = f'{F.Yellow}usage: {A.Reset}'
+            prefix = f'{F.Yellow}usage: {F.Reset}'
         return super(CapitalisedHelpFormatter, self).add_usage(usage, actions, groups, prefix)
 
 
@@ -107,8 +95,8 @@ def DoMain():
     """Program Entry, this is where it all starts."""
     # Parse Command Line
     parser = argparse.ArgumentParser(description=f'{F.Cyan}PyBld is a simple make system implemented in python.{A.Reset}', formatter_class=CapitalisedHelpFormatter)
-    parser._positionals.title = f'{F.Yellow}positional arguments{A.Reset}'
-    parser._optionals.title = f'{F.Yellow}optional arguments{A.Reset}'
+    parser._positionals.title = f'{F.Yellow}positional arguments{F.Reset}'
+    parser._optionals.title = f'{F.Yellow}optional arguments{F.Reset}'
     parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.', default=4)
@@ -166,14 +154,14 @@ def DoMain():
         if selected_Target and selected_Target.Status == TargetStatus.NOTRUN:
             selected_Target.run()
         else:
-            print(f'{crossMark}Error: target function "{selected_Target.Name}" does not exist!')
+            print(f'{crossMark}  {F.Red}Error{F.Reset}: Target function {A.Bright}"{targ}"{A.Reset} does not exist!')
             sys.exit(1)
 
     # =======================================================================
 
     if config['PostMakeFunction'] is not None:
         config['PostMakeFunction']()
-
+        
     return 0
 
 
