@@ -34,6 +34,9 @@ class TargetFile():
         """Update the target modified time and the need to build."""
         if os.path.exists(self.Target):
             self.TargetTime = GetModifyTime(self.Target)
+        else:
+            self.TargetTime = None
+
         self.MakeStatus = MakeStatus.NEEDTOBUILD
         if self.TargetTime is not None and self.SourceTime is not None:
             if self.TargetTime > self.SourceTime:
@@ -44,11 +47,14 @@ class TargetFile():
 class TargetFileList(list):
     """List of Source/Target pairs."""
 
-    def __init__(self, outFile):
+    def __init__(self, binFile, ext='', builddir='', root=CurrentWorkingDirectory(), filters=None, recurse=False):
         """Initialize class members."""
         # This is a 'virtual' target, the source is the sum of the file list
         self.binaryTarget = TargetFile("[Target Files]")
-        self.binaryTarget.Target = os.path.relpath(outFile)
+        self.binaryTarget.Target = os.path.relpath(binFile)
+
+        self.FindSourceFiles(root, filters, recurse)
+        self.SetTargets(ext, builddir)
 
     def FindSourceFiles(self, root=CurrentWorkingDirectory(), filters=None, recurse=False):
         """Glob for files given the root directory and filter pattern."""
@@ -86,29 +92,33 @@ class TargetFileList(list):
     def IsBinaryTargetBuildComplete(self):
         """Is the binary target up to date."""
         self.binaryTarget.UpdateTarget()
+        if self.binaryTarget is None:
+            return False
         return self.binaryTarget.MakeStatus == MakeStatus.NONEEDTOBUILD
 
     def IsTargetListBuildComplete(self):
         """Are all targets in the NONEEDTOBUILD state."""
         # Update all the target dates first
-        map(lambda tf: tf.UpdateTarget(), self)
-        
+        for tf in self:
+            tf.UpdateTarget()
+        self.binaryTarget.UpdateTarget()
+
         # If there is any target that is in the 'NEEDTOBUILD' state, then
         # the target list is not 'BuildComplete'
-        ret = True
-        if list(filter(lambda tf: tf.MakeStatus == MakeStatus.NEEDTOBUILD, self)):
-            ret = False
+        ret = False if list(filter(lambda tf: tf.MakeStatus == MakeStatus.NEEDTOBUILD, self)) else True
         
         # The virtual source of the binary target has a date of 
         # the *latest* target time
         timeList = []
         for tf in self:
-            timeList.append(tf.TargetTime)
-        tfLast = max(timeList)
+            if tf.TargetTime is not None:
+                timeList.append(tf.TargetTime)
+        
+        tfLast = max(timeList) if timeList else None
+        
         self.binaryTarget.SourceTime = tfLast
         self.binaryTarget.UpdateTarget()
 
-        #
         if config['debug'] is True:
             self.PrintTargetFiles()
 
@@ -116,33 +126,29 @@ class TargetFileList(list):
 
     def PrintTargetFiles(self):
         """Print list of Source/Target/Status."""
+        # Update all the target dates first
+        for tf in self:
+            tf.UpdateTarget()
+        self.binaryTarget.UpdateTarget()
+
+        dtFormat = '%Y-%m-%d %H:%M:%S'
         table = [] # this will be a table of tables
         for tf in self:
-            src = ''
-            if len(tf.Source) > 32:
-                src = '...' + tf.Source[-29:]
-            else:
-                src = tf.Source
-            tar = ''
-            if len(tf.Target) > 32:
-                tar = '...' + tf.Target[-29:]
-            else:
-                tar = tf.Target
+            src = '...' + tf.Source[-29:] if len(tf.Source) > 32 else tf.Source
+            tar = '...' + tf.Target[-29:] if len(tf.Target) > 32 else tf.Target
 
-            dtSrc = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tf.SourceTime))
-            dtTar = 'None'
-            if tf.TargetTime is not None:
-                dtTar = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tf.TargetTime))
+            dtSrc = time.strftime(dtFormat, time.localtime(tf.SourceTime))
+            dtTar = time.strftime(dtFormat, time.localtime(tf.TargetTime)) if tf.TargetTime is not None else 'None'
             graphic = [openCircle, crossMark, checkBox][tf.MakeStatus - 1]
             # add a table to the table of tables
             table.append([graphic, src, dtSrc, tar, dtTar, tf.MakeStatus.name])
 
         # Add in the virtual binary source/target
-        dtSrc = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.binaryTarget.SourceTime))
-        dtTar = 'None'
-        if self.binaryTarget.TargetTime is not None:
-            dtTar = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.binaryTarget.TargetTime))
-        table.append(['', self.binaryTarget.Source, dtSrc, self.binaryTarget.Target, dtTar, self.binaryTarget.MakeStatus.name])
+        dtSrc = time.strftime(dtFormat, time.localtime(self.binaryTarget.SourceTime))
+        dtTar = time.strftime(dtFormat, time.localtime(self.binaryTarget.TargetTime)) if self.binaryTarget.TargetTime is not None else 'None'
+            
+        graphic = [openCircle, crossMark, checkBox][self.binaryTarget.MakeStatus - 1]
+        table.append([graphic, self.binaryTarget.Source, dtSrc, self.binaryTarget.Target, dtTar, self.binaryTarget.MakeStatus.name])
 
         Y = F.Yellow
         N = F.Reset
@@ -153,9 +159,4 @@ class TargetFileList(list):
         if config['debug'] == True:
             self.PrintTargetFiles()
 
-if __name__ == '__main__':
-    x = TargetFileList()
-    x.FindSourceFiles(filters=['*.cpp', '*.s'], recurse=True)
-    x.SetTargets('.o', 'build')
 
-    x.PrintTargetFiles()

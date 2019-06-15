@@ -1,38 +1,45 @@
-"""Template text for PyMake."""
+"""Template text for PyBld."""
 
-gccTemplate = """
+makeFileTemplate = """
 
 from PyBld import *
-Debug = True # <-- set it to True to enable more debugging messages
+config['debug'] = True # <-- set it to True to enable more debugging messages
 
 CC = 'gcc'
 CFLAGS = '-g -O2 -std=c99'
 LINKFLAGS = ''
 
-executable = 'a.out'
+executable = 'MyApp.exe'
 BUILDdir = './Build/'
-src_files = find(root='./', filter='*.c')
-obj_files = replace(src_files, '.c', '.o')
-obj_files = retarget(obj_files, BUILDdir, '')
 
+tfList = TargetFileList(f'{BUILDdir}{binary}')
+tfList.FindSourceFiles(filters=['*.cpp', '*.c', '*.s'])
+tfList.SetTargets('.o', BUILDdir)
 
-@target
-def all(Tlink): # depends on Target link
-  print('Build Succeeded', colors.IGreen)
-  return True
+@buildTarget
+def all(link): # depends on Link Target
+    print('Build Succeeded')
+    return True
 
-@target
-def Tlink(Tcompile): # depends on Target compile
-  return link(CC, LINKFLAGS, obj_files, executable)
+@buildTarget
+def link(compile): # depends on Compile Target
+    if not tfList.IsBinaryTargetBuildComplete():
+        strObjFiles = ''
+        for target in tfList:
+            strObjFiles += target.Target + ' '
+      
+        _ret, _retCode, _out = Shell(f'{LINK} {LINKFLAGS} {strObjFiles} -o {BUILDdir}{binary}', show_cmd=True, show_output=True)
+      
+    return tfList.IsBinaryTargetBuildComplete()
 
-@target
-def Tcompile(src_files): # depends on srource files
-  return compile(CC, CFLAGS, src_files, obj_files)
+@buildTarget
+def compile(tfList): # depends on list of source files
+    for target in list(filter(lambda tf: tf.MakeStatus == MakeStatus.NEEDTOBUILD, tfList)):
+        _ret, _retCode, _out = Shell(f'{CC} {CFLAGS} {target.Target} {target.Source}', show_cmd=True, show_output=True)
+    return tfList.IsTargetListBuildComplete()
 
-
-@target
+@buildTarget
 def clean():
-  retV = run(eval('rm -r $(BUILDdir)'))
-  retV = run(eval('rm $(executable)'))
-  return True
+    Shell(f'rm -r {BUILDdir}')
+    return True
 """

@@ -1,5 +1,6 @@
 """Common file operations."""
 import os
+import shutil
 from pathlib import Path
 
 
@@ -13,9 +14,14 @@ def CreateDirectory(name):
     os.makedirs(name, exist_ok=True)
 
 
-def RemoveDirectory(name):
+def IsDirectory(path):
+    """Return if path is a directory."""
+    return os.path.isdir(path)
+
+
+def RemoveDirectory(path):
     """Remove the given directory name.  This will also remove all subdirecties."""
-    os.removedirs(name)
+    shutil.rmtree(path, ignore_errors=False)
 
 
 def RenameFile(old, new):
@@ -38,10 +44,10 @@ def ChangeDirectory(path):
     return os.chdir(path)
 
 
-def GetModifyTime(path):
+def GetModifyTime(name):
     """Get the modification time of the given file."""
     try:
-        return os.path.getmtime(path)
+        return os.path.getmtime(name)
     except os.error:
         pass
 

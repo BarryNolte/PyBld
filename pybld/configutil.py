@@ -11,11 +11,6 @@ config = {
     'jobs': 4,
 }
 
-####
-# For later use, termcolor package or terminal-palette
-# print_red_on_cyan = lambda x: cprint(x, 'red', 'on_cyan')
-# print_red_on_cyan('Hello, World!')
-# print_red_on_cyan('Hello, Universe!')
 class A():
     """Attribute Codes."""
     
@@ -69,6 +64,3 @@ warningTriangle = u'⚠'
 bellMark = u'🔔'
 fireMark = u'🔥'
 
-
-if __name__ == '__main__':
-    print("")

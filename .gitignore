@@ -5,3 +5,9 @@ makefile.py
 .vscode/ipch/*
 .mypy_cache
 
+
+build/
+
+pybld\.egg-info/
+
+dist/

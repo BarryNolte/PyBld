@@ -7,7 +7,7 @@ from textwrap import fill, wrap
 
 from pybld.configutil import A, F, B, config, crossMark, defaultMakefile
 from pybld.jobs import Shell
-from pybld.makefile_template import gccTemplate
+from pybld.makefile_template import makeFileTemplate
 from pybld.targetobj import TargetObject, TargetStatus
 from pybld.decorators import descriptions
 from tabulate import tabulate
@@ -49,7 +49,7 @@ def CreateMakefile(filename):
     """Create a makefile from a template."""
     retV = input(f'Makefile does not exist, do you want to create "{filename}"? (y/n): ')
     if retV.lower() == 'y':
-        tempText = str(gccTemplate)
+        tempText = str(makeFileTemplate)
         with open(filename, 'w') as f:
             f.write(tempText)
     sys.exit()
@@ -67,7 +67,8 @@ def PrintTargets(targets):
             elif isinstance(depTarget, list):
                 for fn in depTarget:
                     dep += fn.Source + ' '
-        desc = str(descriptions.get(target, ''))
+        desc = descriptions.get(target, '')
+        desc = '' if desc is None else desc
         
         row.append(target)
         row.append(fill(dep, 36))
@@ -101,8 +102,7 @@ def DoMain():
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.', default=4)
     parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
-    parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.')
-    parser.epilog = '\nUSAGE EXAMPLES GO HERE\n'
+    parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.')   
 
     args = parser.parse_args()
 

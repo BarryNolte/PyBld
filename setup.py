@@ -6,10 +6,13 @@ with open("README.md", "r") as fh:
 
 setup(
     name="pybld",
-    version="0.6.0",
+    version="0.7.0",
     author="Barry Nolte",
     author_email="barry@barrynolte.com",
     description="Python based make tool",
+    license="MIT",
+    python_requires=">=3",
+    platform="any",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/pybld",

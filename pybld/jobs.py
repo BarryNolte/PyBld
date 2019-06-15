@@ -21,9 +21,8 @@ def Shell(cmd, show_cmd=False, show_output=True):
     if err:
         print(err)
 
-    if show_output:
-        if out:
-            print(out)
+    if show_output and out:
+        print(out)
 
     return P.returncode == 0, P.returncode, out
 
@@ -83,18 +82,3 @@ class ProcessControl:
             except(BaseException):
                 pass
 
-
-if __name__ == '__main__':
-    # Tests
-    po = ProcessControl()
-    po.ShellAsync(
-        ['sleep 5 && echo 5',
-         'sleep 2 && echo 2',
-         'sleep 1 && echo 1',
-         'sleep 10 && echo 10',
-         'sleep 7 && echo 7 >&2',
-         'sleep 3 && echo 3',
-         'sleep 9 && echo 9',
-         'sleep 12 && echo 12'], show_cmd=True)
-
-    po.WaitOnProcesses(show_output=True)
