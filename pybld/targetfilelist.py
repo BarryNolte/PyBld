@@ -84,7 +84,7 @@ class TargetFileList(list):
 
             tf.UpdateTarget()
 
-        self.binaryTarget.UpdateTarget()
+        self._UpdateVirtualSourceTargetTime()
 
         if config['debug'] is True:
             self.PrintTargetFiles()
@@ -96,17 +96,8 @@ class TargetFileList(list):
             return False
         return self.binaryTarget.MakeStatus == MakeStatus.NONEEDTOBUILD
 
-    def IsTargetListBuildComplete(self):
-        """Are all targets in the NONEEDTOBUILD state."""
-        # Update all the target dates first
-        for tf in self:
-            tf.UpdateTarget()
-        self.binaryTarget.UpdateTarget()
-
-        # If there is any target that is in the 'NEEDTOBUILD' state, then
-        # the target list is not 'BuildComplete'
-        ret = False if list(filter(lambda tf: tf.MakeStatus == MakeStatus.NEEDTOBUILD, self)) else True
-        
+    def _UpdateVirtualSourceTargetTime(self):
+        """Update the virtual build target with max(time) of all object files."""
         # The virtual source of the binary target has a date of 
         # the *latest* target time
         timeList = []
@@ -115,9 +106,21 @@ class TargetFileList(list):
                 timeList.append(tf.TargetTime)
         
         tfLast = max(timeList) if timeList else None
-        
+ 
         self.binaryTarget.SourceTime = tfLast
         self.binaryTarget.UpdateTarget()
+
+    def IsTargetListBuildComplete(self):
+        """Are all targets in the NONEEDTOBUILD state."""
+        # Update all the target dates first
+        for tf in self:
+            tf.UpdateTarget()
+
+        # If there is any target that is in the 'NEEDTOBUILD' state, then
+        # the target list is not 'BuildComplete'
+        ret = False if list(filter(lambda tf: tf.MakeStatus == MakeStatus.NEEDTOBUILD, self)) else True
+        
+        self._UpdateVirtualSourceTargetTime()
 
         if config['debug'] is True:
             self.PrintTargetFiles()

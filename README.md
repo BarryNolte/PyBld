@@ -37,6 +37,8 @@ def all():
 
 ## Specifying Dependent Targets
 
+<img src="./process.svg">
+
 
 ## Pre/Post functions
 Setting one or both of these configuration values will allow for a function to be called before any actions are taken by PyBld and after all actions have been taken by PyBld.  This is useful when a global environment must be created, then destroyed while a build is happening.

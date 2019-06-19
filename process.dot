@@ -1,0 +1,66 @@
+digraph G {
+    rankdir=LR;
+    fontname="Helvetica";
+    label ="TargetFileList - Class Structure"
+    fontsize = 25;
+    "Virtual Source" [  shape=polygon,
+                        fontsize=20,
+                        fontname="courier", 
+                        sides=4, 
+                        skew=0.1, 
+                        style=bold, 
+                        color=blue];
+    "Binary" [  shape=polygon, 
+                sides=5, 
+                peripheries=2, 
+                fontname="courier", 
+                fontsize=20]
+
+    subgraph clusterStart {
+        label="Compile";
+        fontsize=25;
+        color="#c0c0c0";
+        style=filled;
+        subgraph clusterSource {
+            label="Source";
+            color="#e0e0e0";
+            "file1.cpp" [shape=box, fontname="courier", fontsize=20]
+            "file2.cpp" [shape=box, fontname="courier", fontsize=20]
+            "file3.cpp" [shape=box, fontname="courier", fontsize=20]
+            "file4.cpp" [shape=box, fontname="courier", fontsize=20]
+            "file5.cpp" [shape=box, fontname="courier", fontsize=20]
+            
+        }
+        subgraph clusterTarget {
+            label="Target";
+            color="#e0e0e0";
+            "file1.o" [shape=box, fontname="courier", fontsize=20]
+            "file2.o" [shape=box, fontname="courier", fontsize=20]
+            "file3.o" [shape=box, fontname="courier", fontsize=20]
+            "file4.o" [shape=box, fontname="courier", fontsize=20]
+            "file5.o" [shape=box, fontname="courier", fontsize=20]
+            
+        }        
+                
+        "file1.cpp" -> "file1.o";
+        "file2.cpp" -> "file2.o";
+        "file3.cpp" -> "file3.o";
+        "file4.cpp" -> "file4.o";
+        "file5.cpp" -> "file5.o";
+    }
+    
+    "file1.o" -> "Virtual Source";
+    "file2.o" -> "Virtual Source";
+    "file3.o" -> "Virtual Source";
+    "file4.o" -> "Virtual Source";
+    "file5.o" -> "Virtual Source";
+
+    subgraph clusterLink {
+        label = "Link";
+        fontsize=25;
+        color="#c0c0c0";
+        style="filled"
+        
+        "Virtual Source" -> "Binary";
+    }
+}

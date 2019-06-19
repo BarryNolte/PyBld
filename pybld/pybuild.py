@@ -134,6 +134,7 @@ def DoMain():
     # Print targets if requested, then exit
     if args.l:
         PrintTargets(Targets)
+        exit()
 
     # Call this function before any make actions take place,
     # must be called after the make file is loaded

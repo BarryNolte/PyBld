@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="pybld",
-    version="0.7.0",
+    version="0.8.0",
     author="Barry Nolte",
     author_email="barry@barrynolte.com",
     description="Python based make tool",
