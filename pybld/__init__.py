@@ -20,9 +20,9 @@ def global_exception_hook(extype, exvalue, tb):
     C = F.Cyan
     N = A.Reset + F.Reset + B.Reset
 
-    print(f'==========================================')
-    print(f'=     {R}PyBld E x c e p t i o n{N}            =')
-    print(f'==========================================')
+    print(f'========================================')
+    print(f'=     {R}PyBld E x c e p t i o n{N}          =')
+    print(f'========================================')
     print('')
     print(f' Type  : {Y}{extype}{N}')
     print(f' Value : {Y}{exvalue}{N}')

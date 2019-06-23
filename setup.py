@@ -4,9 +4,12 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+## Current Version Number
+PyBldVersion = "1.0.0"
+
 setup(
     name="pybld",
-    version="0.8.0",
+    version=PyBldVersion,
     author="Barry Nolte",
     author_email="barry@barrynolte.com",
     description="Python based make tool",

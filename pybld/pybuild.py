@@ -1,19 +1,19 @@
-"""Mail PyBld code file."""
+"""Main PyBld code file."""
 import argparse
 import os
 import re
 import sys
 from textwrap import fill, wrap
 
-from pybld.configutil import A, F, B, config, crossMark, defaultMakefile
+from pybld.configutil import A, F, B, config, crossMark, copyright, defaultMakefile
 from pybld.jobs import Shell
 from pybld.makefile_template import makeFileTemplate
 from pybld.targetobj import TargetObject, TargetStatus
 from pybld.decorators import descriptions
+from pybld.fileops import Touch
 from tabulate import tabulate
 
-# TODO: Need to 'classify' these to hide functions
-
+PyBldVerson = "1.0.0"
 
 def ParseMakefile(makefile_path, makefileObj):
     """Parse the makefile to find the targets."""
@@ -29,8 +29,6 @@ def ParseMakefile(makefile_path, makefileObj):
                 target_func = target_func[0]
                 target_args = re.findall(r'def\s+\w+\s*\((.*)\)', makefile_lines[i + 1])
                 target_args = target_args[0]
-
-                # desc, pre, post = ParseTargetArgs(l)
 
                 Targets[target_func] = TargetObject(target_func, target_args, makefileObj)
 
@@ -98,13 +96,22 @@ def DoMain():
     parser = argparse.ArgumentParser(description=f'{F.Cyan}PyBld is a simple make system implemented in python.{A.Reset}', formatter_class=CapitalisedHelpFormatter)
     parser._positionals.title = f'{F.Yellow}positional arguments{F.Reset}'
     parser._optionals.title = f'{F.Yellow}optional arguments{F.Reset}'
-    parser.add_argument('-l', help=f'List available targets in make file and exit.', action='store_true')
+    parser.add_argument('-v', help=f'Show PyBld version and exit.', action='store_true')
+    parser.add_argument('-l', help='List available targets in make file and exit.', action='store_true')
+    parser.add_argument('-t', help='Touch all input source files.', action='store_true')
     parser.add_argument('-f', metavar='Makefile', help=f'Explicit path to makefile, default = "{defaultMakefile}".', default=defaultMakefile)
     parser.add_argument('-j', metavar='Jobs', type=int, help='Number of jobs used in the make process.', default=4)
     parser.add_argument('-D', metavar='Define', action='append', help='Define variables for use in the makefile. format="-Dvar=value"')
     parser.add_argument('target', metavar='Target', nargs='*', help='Make target(s) in the makefile.')   
 
     args = parser.parse_args()
+
+    # Show version
+    if args.v:
+        print(f'PyBld {PyBldVerson}\n')
+        print(f'Copyright {copyright} 2019 Open Road Electronics.')
+        print(f'No warranty expressed or implied.')
+        exit(1)
 
     # Parse out any defined 'defines'
     if args.D:
@@ -130,6 +137,17 @@ def DoMain():
 
     # Get list of possible targets
     Targets = ParseMakefile(args.f, makefileObj)
+
+    # Touch all the source files
+    if args.t:
+        print('Touching files:')
+        for target in Targets:
+            for depTarget in Targets[target].Dependencies:
+                if isinstance(depTarget, list):
+                    for fn in depTarget:
+                        print(f' {fn.Source}')
+                        Touch(fn.Source)
+        exit()
 
     # Print targets if requested, then exit
     if args.l:
