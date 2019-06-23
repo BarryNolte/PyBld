@@ -63,4 +63,5 @@ prohibitedMark = u'🚫'
 warningTriangle = u'⚠'
 bellMark = u'🔔'
 fireMark = u'🔥'
+copyright = u'©'
 

@@ -23,6 +23,9 @@ def RemoveDirectory(path):
     """Remove the given directory name.  This will also remove all subdirecties."""
     shutil.rmtree(path, ignore_errors=False)
 
+def RemoveFile(name):
+    """Delete the given file name."""
+    return os.remove(name, None)
 
 def RenameFile(old, new):
     """Rename a given old file name and change it to the given new name."""
@@ -31,7 +34,7 @@ def RenameFile(old, new):
 
 def Touch(name):
     """Touch the given file, changes the modification time of the given file to the current time."""
-    Path.touch(name, exist_ok=True)
+    Path(name).touch(exist_ok=True)
 
 
 def GetDirectoryFiles(path):

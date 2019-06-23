@@ -32,10 +32,18 @@ class TargetFile():
 
     def UpdateTarget(self):
         """Update the target modified time and the need to build."""
+        # Get the Source File Time
+        if os.path.exists(self.Source):
+            self.SourceTime = GetModifyTime(self.Source)
+        else:
+            self.SourceTime = None
+
+        # Get the Target File Time    
         if os.path.exists(self.Target):
             self.TargetTime = GetModifyTime(self.Target)
         else:
             self.TargetTime = None
+
 
         self.MakeStatus = MakeStatus.NEEDTOBUILD
         if self.TargetTime is not None and self.SourceTime is not None:
@@ -43,18 +51,17 @@ class TargetFile():
                 self.MakeStatus = MakeStatus.NONEEDTOBUILD
 
 
-
 class TargetFileList(list):
     """List of Source/Target pairs."""
 
-    def __init__(self, binFile, ext='', builddir='', root=CurrentWorkingDirectory(), filters=None, recurse=False):
+    def __init__(self, binFile, targetExt='', builddir='', root=CurrentWorkingDirectory(), filters=None, recurse=False):
         """Initialize class members."""
         # This is a 'virtual' target, the source is the sum of the file list
         self.binaryTarget = TargetFile("[Target Files]")
         self.binaryTarget.Target = os.path.relpath(binFile)
 
         self.FindSourceFiles(root, filters, recurse)
-        self.SetTargets(ext, builddir)
+        self.SetTargets(targetExt, builddir)
 
     def FindSourceFiles(self, root=CurrentWorkingDirectory(), filters=None, recurse=False):
         """Glob for files given the root directory and filter pattern."""
@@ -105,7 +112,7 @@ class TargetFileList(list):
             if tf.TargetTime is not None:
                 timeList.append(tf.TargetTime)
         
-        tfLast = max(timeList) if timeList else None
+        tfLast = max(timeList) if len(timeList) > 0 else None
  
         self.binaryTarget.SourceTime = tfLast
         self.binaryTarget.UpdateTarget()
@@ -147,7 +154,7 @@ class TargetFileList(list):
             table.append([graphic, src, dtSrc, tar, dtTar, tf.MakeStatus.name])
 
         # Add in the virtual binary source/target
-        dtSrc = time.strftime(dtFormat, time.localtime(self.binaryTarget.SourceTime))
+        dtSrc = time.strftime(dtFormat, time.localtime(self.binaryTarget.SourceTime)) if self.binaryTarget.SourceTime is not None else 'None'
         dtTar = time.strftime(dtFormat, time.localtime(self.binaryTarget.TargetTime)) if self.binaryTarget.TargetTime is not None else 'None'
             
         graphic = [openCircle, crossMark, checkBox][self.binaryTarget.MakeStatus - 1]

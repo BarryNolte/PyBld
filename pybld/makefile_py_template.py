@@ -6,15 +6,16 @@ from PyBld import *
 config['debug'] = True # <-- set it to True to enable more debugging messages
 
 CC = 'gcc'
-CFLAGS = '-g -O2 -std=c99'
+CFLAGS = '-g'
 LINKFLAGS = ''
 
 executable = 'MyApp.exe'
 BUILDdir = './Build/'
 
-tfList = TargetFileList(f'{BUILDdir}{binary}')
-tfList.FindSourceFiles(filters=['*.cpp', '*.c', '*.s'])
-tfList.SetTargets('.o', BUILDdir)
+tfList = TargetFileList(binFile=f'{BUILDdir}{executable}', 
+                        targetExt='.o', 
+                        builddir=BUILDdir, 
+                        filters=['*.cpp', '*.s'])
 
 @buildTarget
 def all(link): # depends on Link Target
@@ -40,6 +41,6 @@ def compile(tfList): # depends on list of source files
 
 @buildTarget
 def clean():
-    Shell(f'rm -r {BUILDdir}')
+    RemoveDirectory(BUILDdir)
     return True
 """
